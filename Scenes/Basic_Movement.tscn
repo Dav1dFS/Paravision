@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dbc6odv0qj6g4"]
+
+[node name="Main" type="Node3D"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 5.4, 0, 0, 0, -0.100000024, -0.3999995, 0, 0)
+use_collision = true
+size = Vector3(8.2, 1, 1)
