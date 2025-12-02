@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=9 format=3 uid="uid://dbc6odv0qj6g4"]
 
 [ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
 [ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
+[ext_resource type="Material" uid="uid://c1bbkc1w2xxoa" path="res://materials/visible_mat.tres" id="3_51vxp"]
+[ext_resource type="Script" uid="uid://minq3fibfxbc" path="res://scripts_invis_mode/turn_invisible.gd" id="4_bus37"]
 
 [sub_resource type="Environment" id="Environment_dhrl6"]
 background_mode = 2
@@ -15,6 +17,10 @@ glow_enabled = true
 
 [sub_resource type="Compositor" id="Compositor_uath2"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_58ov2"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_op41l"]
+
 [node name="Main" type="Node3D"]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -25,6 +31,7 @@ shadow_enabled = true
 
 [node name="Character" parent="." instance=ExtResource("1_dhrl6")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, -0.068484426, 0)
+default_reticle = null
 
 [node name="ground" type="CSGBox3D" parent="."]
 transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, -6.337537, -0.7122039, 7.6489296)
@@ -34,3 +41,19 @@ size = Vector3(4.3872375, 1, 2.058838)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_dhrl6")
 compositor = SubResource("Compositor_uath2")
+
+[node name="actual cube to use later" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.12955706, 0, 0.99157196, 0, 1, 0, -0.99157196, 0, 0.12955706, 1.4668677, 1.8836824, 4.144637)
+visible = false
+material_override = ExtResource("3_51vxp")
+mesh = SubResource("BoxMesh_58ov2")
+skeleton = NodePath("../visible box test")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="actual cube to use later"]
+shape = SubResource("BoxShape3D_op41l")
+
+[node name="visible box test" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4668677, 0.47640383, 2.4258046)
+use_collision = true
+material = ExtResource("3_51vxp")
+script = ExtResource("4_bus37")
