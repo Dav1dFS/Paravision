@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Paravision"
+config/tags=PackedStringArray("computação_visual")
 run/main_scene="uid://dbc6odv0qj6g4"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
@@ -18,3 +19,10 @@ config/icon="res://icon.svg"
 [dotnet]
 
 project/assembly_name="Paravision"
+
+[file_customization]
+
+folder_colors={
+"res://Scenes/": "yellow",
+"res://materials/": "red"
+}
