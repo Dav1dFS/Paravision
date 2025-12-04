@@ -1,10 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=7 format=3 uid="uid://dbc6odv0qj6g4"]
 
 [ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
 [ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
-[ext_resource type="Material" uid="uid://c1bbkc1w2xxoa" path="res://materials/invisible_mat.tres" id="3_51vxp"]
+[ext_resource type="Material" uid="uid://c1bbkc1w2xxoa" path="res://materials/visible_mat.tres" id="3_51vxp"]
 [ext_resource type="Script" uid="uid://minq3fibfxbc" path="res://scripts_invis_mode/turn_invisible.gd" id="4_bus37"]
-[ext_resource type="Material" uid="uid://cesmr4rpr1ghb" path="res://materials/visible_material.tres" id="5_bus37"]
 
 [sub_resource type="Environment" id="Environment_dhrl6"]
 background_mode = 2
@@ -39,16 +38,8 @@ size = Vector3(4.3872375, 1, 2.058838)
 environment = SubResource("Environment_dhrl6")
 compositor = SubResource("Compositor_uath2")
 
-[node name="cube test" type="CSGBox3D" parent="." node_paths=PackedStringArray("obj")]
-transform = Transform3D(0.9796383, 0, 0.20077024, 0, 1, 0, -0.20077024, 0, 0.9796383, 0.72540367, 1.6401969, 2.1401985)
+[node name="cube test" type="CSGBox3D" parent="."]
+transform = Transform3D(0.34452826, 0, -0.9387759, 0, 1, 0, 0.9387759, 0, 0.34452826, -2.0474856, 1.8218553, 2.1246111)
 material_override = ExtResource("3_51vxp")
 use_collision = true
-size = Vector3(10.770508, 3.098816, 1)
 script = ExtResource("4_bus37")
-invis_mat = ExtResource("3_51vxp")
-obj = NodePath(".")
-
-[node name="visible test" type="CSGCylinder3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6083884, 1.8833964, 0)
-material_override = ExtResource("5_bus37")
-height = 3.5302734
