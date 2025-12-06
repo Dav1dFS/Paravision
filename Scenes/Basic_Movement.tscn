@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=8 format=3 uid="uid://dbc6odv0qj6g4"]
 
 [ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
 [ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
+[ext_resource type="Script" uid="uid://cfphimfb0uamd" path="res://Scripts/gravity_anchor/gravity_anchor.gd" id="2_xq1w2"]
+[ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="4_51vxp"]
 
 [sub_resource type="Environment" id="Environment_dhrl6"]
 background_mode = 2
@@ -15,12 +17,15 @@ glow_enabled = true
 
 [sub_resource type="Compositor" id="Compositor_uath2"]
 
+[sub_resource type="LabelSettings" id="LabelSettings_bus37"]
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
 [node name="Main" type="Node3D"]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.96986353, 0.24364886, 0, -0.24364886, 0.96986353, 0, 1.3884219, 0)
 light_energy = 3.244
-light_angular_distance = 4.77
 shadow_enabled = true
 
 [node name="Character" parent="." instance=ExtResource("1_dhrl6")]
@@ -31,6 +36,170 @@ transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, -6.337537, -0
 use_collision = true
 size = Vector3(4.3872375, 1, 2.058838)
 
+[node name="ceiling" type="CSGBox3D" parent="."]
+transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, -6.337537, 26.226444, 7.6489296)
+use_collision = true
+size = Vector3(4.3872375, 1, 2.058838)
+
+[node name="east wall" type="CSGBox3D" parent="."]
+transform = Transform3D(-8.6163897e-07, -1, 0, 19.712002, -4.371139e-08, 0, 0, 0, 37.100002, -48.19261, 12.403663, 7.6489296)
+use_collision = true
+size = Vector3(1.8067703, 1, 2.058838)
+
+[node name="west wall" type="CSGBox3D" parent="."]
+transform = Transform3D(-8.6163897e-07, 1, 0, -19.712002, -4.371139e-08, 0, 0, 0, 37.100002, 36.778286, 13.428276, 7.6489296)
+use_collision = true
+size = Vector3(1.625557, 1, 2.058838)
+
+[node name="east wall2" type="CSGBox3D" parent="."]
+transform = Transform3D(3.7663435e-14, 4.371139e-08, 37.100002, 19.712002, -4.371139e-08, 0, 8.6163897e-07, 1, -1.6216926e-06, -6.370978, 11.654715, 45.92669)
+use_collision = true
+size = Vector3(1.7423782, 1, 2.058838)
+
+[node name="west wall2" type="CSGBox3D" parent="."]
+transform = Transform3D(3.7663435e-14, -4.371139e-08, 37.100002, -19.712002, -4.371139e-08, 0, 8.6163897e-07, -1, -1.6216926e-06, -7.8356495, 12.933792, -29.519585)
+use_collision = true
+size = Vector3(1.5714798, 1, 2.255005)
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_dhrl6")
 compositor = SubResource("Compositor_uath2")
+
+[node name="Gravity_Anchor_UI_Parent" type="Control" parent="." node_paths=PackedStringArray("UI_Parent_Node")]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_xq1w2")
+UI_Parent_Node = NodePath(".")
+
+[node name="Y AXIS Label" type="Label" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.257
+anchor_top = 0.365
+anchor_right = 0.257
+anchor_bottom = 0.365
+offset_left = -35.063995
+offset_top = -19.520004
+offset_right = 34.936005
+offset_bottom = 19.479996
+text = "X&Y AXIS"
+label_settings = SubResource("LabelSettings_bus37")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="X AXIS Label" type="Label" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.58100003
+anchor_top = 0.365
+anchor_right = 0.58100003
+anchor_bottom = 0.365
+offset_left = -24.312012
+offset_top = -19.520004
+offset_right = 24.687988
+offset_bottom = 19.479996
+text = "Z AXIS"
+label_settings = SubResource("LabelSettings_bus37")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Title" type="Label" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.48400003
+anchor_top = 0.16800001
+anchor_right = 0.48400003
+anchor_bottom = 0.16800001
+offset_left = -112.568054
+offset_top = 19.135994
+offset_right = 112.431946
+offset_bottom = 61.135994
+text = "PLACE ANCHOR"
+label_settings = ExtResource("4_51vxp")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WEST" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.264
+anchor_top = 0.5
+anchor_right = 0.264
+anchor_bottom = 0.509
+offset_left = -33.12799
+offset_top = 13.0
+offset_right = 32.87201
+offset_bottom = 73.168
+text = "WEST"
+icon_alignment = 1
+
+[node name="EAST" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.42100003
+anchor_top = 0.512
+anchor_right = 0.42100003
+anchor_bottom = 0.512
+offset_left = -32.992035
+offset_top = 7.223999
+offset_right = 33.007965
+offset_bottom = 73.224
+text = "EAST"
+
+[node name="NORTH" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.342
+anchor_top = 0.37300003
+anchor_right = 0.342
+anchor_bottom = 0.37300003
+offset_left = -33.307983
+offset_top = 7.29599
+offset_right = 32.692017
+offset_bottom = 73.29599
+text = "NORTH"
+
+[node name="SOUTH" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.34100002
+anchor_top = 0.657
+anchor_right = 0.34100002
+anchor_bottom = 0.657
+offset_left = -32.83203
+offset_top = 7.2640076
+offset_right = 33.16797
+offset_bottom = 73.26401
+text = "SOUTH"
+
+[node name="UP" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.67800003
+anchor_top = 0.37300003
+anchor_right = 0.67800003
+anchor_bottom = 0.37300003
+offset_left = -33.05603
+offset_top = 7.29599
+offset_right = 32.94397
+offset_bottom = 73.29599
+text = "UP"
+icon_alignment = 1
+
+[node name="DOWN" type="Button" parent="Gravity_Anchor_UI_Parent"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.67700005
+anchor_top = 0.65400004
+anchor_right = 0.67700005
+anchor_bottom = 0.65400004
+offset_left = -32.904053
+offset_top = 7.2079773
+offset_right = 33.095947
+offset_bottom = 73.20798
+text = "DOWN
+"
+icon_alignment = 1
