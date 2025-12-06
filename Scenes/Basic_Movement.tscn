@@ -39,7 +39,7 @@ light_energy = 3.244
 light_angular_distance = 4.77
 shadow_enabled = true
 
-[node name="Character" parent="." instance=ExtResource("1_dhrl6")]
+[node name="Character" parent="." groups=["Player"] instance=ExtResource("1_dhrl6")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.840965, -0.068484426, -4.603806)
 default_reticle = null
 
@@ -71,18 +71,22 @@ material_override = ExtResource("5_pdb4r")
 use_collision = true
 size = Vector3(4.123047, 0.26464844, 3.506836)
 
-[node name="new_laser" type="StaticBody3D" parent="."]
+[node name="laser" type="Area3D" parent="." node_paths=PackedStringArray("area_obj", "respawn_point", "player")]
 transform = Transform3D(-4.3711385e-08, -4.371139e-08, -1, -1, 0, 4.371139e-08, 0, 1, -4.371139e-08, -11.331959, 1.2144314, -4.0521374)
 script = ExtResource("4_bus37")
+area_obj = NodePath(".")
 invis_mat = ExtResource("3_51vxp")
+respawn_point = NodePath("../Respawn_Pad")
+player = NodePath("../Character")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="new_laser"]
-transform = Transform3D(0.192, 0, 0, 0, 3.669, 0, 0, 0, 0.192, 0, 0, 0)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="laser"]
+transform = Transform3D(0.192, 4.2351647e-22, 1.6035592e-23, 0, 3.669, 0, 0, 0, 0.192, 0, 0, 0)
 material_override = ExtResource("3_51vxp")
 mesh = SubResource("CylinderMesh_nfju6")
+skeleton = NodePath("")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="new_laser"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.3841858e-07, -0.015136719, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="laser"]
+transform = Transform3D(1, 0, 8.351872e-23, 0, 1, 0, 0, 0, 1, -2.3841858e-07, -0.015136719, 0)
 shape = SubResource("CylinderShape3D_k4tee")
 
 [node name="new_visible wall" type="StaticBody3D" parent="." node_paths=PackedStringArray("colision_shape")]
@@ -99,3 +103,5 @@ shape = SubResource("BoxShape3D_nfju6")
 transform = Transform3D(5.8059583, 0, 0, 0, 2.7322497, 0, 0, 0, 1, 0, 0, 0)
 material_override = ExtResource("5_bus37")
 mesh = SubResource("BoxMesh_k4tee")
+
+[connection signal="body_entered" from="laser" to="laser" method="_on_body_entered"]

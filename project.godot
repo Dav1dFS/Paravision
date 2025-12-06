@@ -28,6 +28,10 @@ folder_colors={
 "res://scripts_invis_mode/": "pink"
 }
 
+[global_group]
+
+Player=""
+
 [input]
 
 Invis_Toggle={
