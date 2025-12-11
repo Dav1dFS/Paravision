@@ -114,9 +114,13 @@ extends CharacterBody3D
 ## If your game changes the gravity value during gameplay, check this property to allow the player to experience the change in gravity.
 @export var dynamic_gravity : bool = false
 
+
 #endregion
 
 #region Member Variable Initialization
+
+@export var cubo_scene: PackedScene  # Arrasta o Cubo.tscn no Inspector
+@export var interacao_distancia: float = 5.0  # alcance máximo para interagir
 
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed : float = base_speed
@@ -161,6 +165,20 @@ func _ready():
 
 
 func _process(_delta):
+	
+	
+
+	
+	if pausing_enabled:
+		handle_pausing()
+	
+	update_debug_menu_per_frame()
+	
+	# ADICIONAR AQUI:
+	if Input.is_key_pressed(KEY_E):
+		spawn_cubo_olhando()
+
+	
 	if pausing_enabled:
 		handle_pausing()
 
@@ -486,5 +504,35 @@ func handle_pausing():
 			Input.MOUSE_MODE_VISIBLE:
 				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 				#get_tree().paused = false
+				
+
+func spawn_cubo_olhando():
+	if cubo_scene == null:
+		print("ERRO: Não arrastaste o Cubo.tscn para 'cubo_scene' no Inspector!")
+		return
+
+	# Criar um ray a partir da câmera na direção que o player está olhando
+	var from = CAMERA.global_transform.origin
+	var to = from + CAMERA.global_transform.basis.z * interacao_distancia
+
+	# Configurar os parâmetros do raycast
+	var ray_params = PhysicsRayQueryParameters3D.new()
+	ray_params.from = from
+	ray_params.to = to
+	ray_params.exclude = [self]  # ignora o player
+
+	# Fazer o raycast
+	var space_state = get_world_3d().direct_space_state
+	var result = space_state.intersect_ray(ray_params)
+
+	if result:
+		var objeto = result.collider
+		if objeto is MeshInstance3D:
+			# Instancia o cubo exatamente na posição do objeto
+			var novo_cubo = cubo_scene.instantiate()
+			novo_cubo.global_transform = objeto.global_transform
+			get_tree().current_scene.add_child(novo_cubo)
+
+
 
 #endregion

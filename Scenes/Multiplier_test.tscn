@@ -1,8 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=6 format=3 uid="uid://dd1u4y5slwlmu"]
 
-[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
-[ext_resource type="PackedScene" uid="uid://cn74fkk5e6ars" path="res://Scenes/cubo.tscn" id="2_uath2"]
-[ext_resource type="Script" uid="uid://i1hhb7e0ala2" path="res://Scenes/cubo.gd" id="3_xq1w2"]
+[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_6hr31"]
+[ext_resource type="PackedScene" uid="uid://cn74fkk5e6ars" path="res://Scenes/cubo.tscn" id="2_bc02p"]
+[ext_resource type="Script" uid="uid://i1hhb7e0ala2" path="res://Scenes/cubo.gd" id="3_fe5iq"]
 
 [sub_resource type="GDScript" id="GDScript_uath2"]
 script/source = "# COPYRIGHT Colormatic Studios
@@ -624,11 +624,11 @@ size = Vector3(2, 0.332, 2)
 
 [node name="Main" type="Node3D"]
 
-[node name="Character" parent="." node_paths=PackedStringArray("spawn_area") instance=ExtResource("1_dhrl6")]
+[node name="Character" parent="." node_paths=PackedStringArray("spawn_area") instance=ExtResource("1_6hr31")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 script = SubResource("GDScript_uath2")
 default_reticle = null
-cubo_scene = ExtResource("2_uath2")
+cubo_scene = ExtResource("2_bc02p")
 interacao_distancia = 10.0
 spawn_area = NodePath("../SpawnArea")
 
@@ -639,9 +639,9 @@ use_collision = true
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.060612977, 0.9981613, 0, -0.9981613, -0.060612977, 0, 7.0430126, 0)
 
-[node name="Node3D" parent="." instance=ExtResource("2_uath2")]
+[node name="Node3D" parent="." instance=ExtResource("2_bc02p")]
 transform = Transform3D(0.305, 0, 0, 0, 0.305, 0, 0, 0, 0.305, -0.41530418, 1.217, 4.441)
-script = ExtResource("3_xq1w2")
+script = ExtResource("3_fe5iq")
 
 [node name="SpawnArea" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4188761, 1.2219589, 4.4459267)
@@ -649,110 +649,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4188761, 1.2219589, 4.4459
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SpawnArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0074768066, 0)
 shape = SubResource("BoxShape3D_uath2")
-[gd_scene load_steps=14 format=3 uid="uid://dbc6odv0qj6g4"]
-
-[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
-[ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
-[ext_resource type="Material" uid="uid://c1bbkc1w2xxoa" path="res://materials/invisible_mat.tres" id="3_51vxp"]
-[ext_resource type="Script" uid="uid://minq3fibfxbc" path="res://scripts_invis_mode/turn_visible.gd" id="4_bus37"]
-[ext_resource type="Material" uid="uid://cesmr4rpr1ghb" path="res://materials/visible_material.tres" id="5_bus37"]
-[ext_resource type="Material" uid="uid://bqcqa5u0s1ucc" path="res://materials/respawn_pad.tres" id="5_pdb4r"]
-[ext_resource type="Script" uid="uid://dbxufhupej0ly" path="res://scripts_invis_mode/turn_invisible.gd" id="7_nfju6"]
-
-[sub_resource type="Environment" id="Environment_dhrl6"]
-background_mode = 2
-background_color = Color(0.5973062, 0.87649775, 0.99999994, 1)
-sky = ExtResource("2_uath2")
-ambient_light_source = 3
-reflected_light_source = 2
-ssao_enabled = true
-ssil_radius = 9.06
-glow_enabled = true
-
-[sub_resource type="Compositor" id="Compositor_uath2"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_nfju6"]
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_k4tee"]
-height = 7.397461
-radius = 0.11376953
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_nfju6"]
-size = Vector3(5.8183594, 2.7285156, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_k4tee"]
-
-[node name="Main" type="Node3D"]
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.96986353, 0.24364886, 0, -0.24364886, 0.96986353, 0, 1.3884219, 0)
-light_energy = 3.244
-light_angular_distance = 4.77
-shadow_enabled = true
-
-[node name="Character" parent="." groups=["Player"] instance=ExtResource("1_dhrl6")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.840965, -0.068484426, -4.603806)
-default_reticle = null
-
-[node name="test wall" type="CSGBox3D" parent="."]
-transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 31.407799, 2.7417617, 3.8222814, -11.6023245)
-use_collision = true
-size = Vector3(0.4248047, 2.4770508, 0.02545166)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="test wall"]
-transform = Transform3D(0.050730515, 0, 0, 0, 1, 0, 0, 0, 0.064871095, -0.252532, -1.162848, 0.0051742494)
-size = Vector3(3.7475586, 6.328003, 0.49951172)
-
-[node name="CSGBox3D" type="CSGBox3D" parent="test wall"]
-transform = Transform3D(0.050730515, 0, 0, 0, 1, 0, 0, 0, 0.064871095, 0.21666706, -1.0155482, 0.005226046)
-size = Vector3(3.2197266, 6.168457, 0.501709)
-
-[node name="ground" type="CSGBox3D" parent="."]
-transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 31.407799, -2.7878013, -0.57858944, -5.9105864)
-use_collision = true
-size = Vector3(1.5639648, 1, 0.9688873)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_dhrl6")
-compositor = SubResource("Compositor_uath2")
-
-[node name="Respawn_Pad" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.798077, -0.072205305, -12.070528)
-material_override = ExtResource("5_pdb4r")
-use_collision = true
-size = Vector3(4.123047, 0.26464844, 3.506836)
-
-[node name="laser" type="Area3D" parent="." node_paths=PackedStringArray("area_obj", "respawn_point", "player")]
-transform = Transform3D(-4.3711385e-08, -4.371139e-08, -1, -1, 0, 4.371139e-08, 0, 1, -4.371139e-08, -11.331959, 1.2144314, -4.0521374)
-script = ExtResource("4_bus37")
-area_obj = NodePath(".")
-invis_mat = ExtResource("3_51vxp")
-respawn_point = NodePath("../Respawn_Pad")
-player = NodePath("../Character")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="laser"]
-transform = Transform3D(0.192, 4.2351647e-22, 1.6035592e-23, 0, 3.669, 0, 0, 0, 0.192, 0, 0, 0)
-material_override = ExtResource("3_51vxp")
-mesh = SubResource("CylinderMesh_nfju6")
-skeleton = NodePath("")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="laser"]
-transform = Transform3D(1, 0, 8.351872e-23, 0, 1, 0, 0, 0, 1, -2.3841858e-07, -0.015136719, 0)
-shape = SubResource("CylinderShape3D_k4tee")
-
-[node name="new_visible wall" type="StaticBody3D" parent="." node_paths=PackedStringArray("colision_shape")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4816017, 1.1085463, -11.458895)
-script = ExtResource("7_nfju6")
-visible_mat = ExtResource("5_bus37")
-colision_shape = NodePath("CollisionShape3D")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="new_visible wall"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0068359375, 0.0009765625, 0)
-shape = SubResource("BoxShape3D_nfju6")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="new_visible wall"]
-transform = Transform3D(5.8059583, 0, 0, 0, 2.7322497, 0, 0, 0, 1, 0, 0, 0)
-material_override = ExtResource("5_bus37")
-mesh = SubResource("BoxMesh_k4tee")
-
-[connection signal="body_entered" from="laser" to="laser" method="_on_body_entered"]
