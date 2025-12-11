@@ -1,8 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://datdmgi41liy2"]
+[gd_scene load_steps=12 format=3 uid="uid://datdmgi41liy2"]
 
 [ext_resource type="PackedScene" uid="uid://c5ot8egiyermi" path="res://Scenes/CharacterScenes/Player.tscn" id="1_gxvce"]
 [ext_resource type="Script" uid="uid://brvh8jhrd08h7" path="res://Scripts/interactable_objects.gd" id="1_itg1s"]
-[ext_resource type="Script" uid="uid://co5pdvvot5c46" path="res://Scripts/player.gd" id="2_itg1s"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5cjrv"]
 albedo_color = Color(1, 0.644799, 0.60000235, 1)
@@ -117,7 +116,6 @@ shadow_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_gxvce")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
-script = ExtResource("2_itg1s")
 
 [node name="Hand" type="Node3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.5, -0.40000007)

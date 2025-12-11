@@ -1,13 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://c5ot8egiyermi"]
 
-[sub_resource type="GDScript" id="GDScript_xvlf0"]
+[ext_resource type="Script" uid="uid://co5pdvvot5c46" path="res://Scripts/player.gd" id="1_xvlf0"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ectt0"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xvlf0"]
 
 [node name="Player" type="CharacterBody3D"]
-script = SubResource("GDScript_xvlf0")
+script = ExtResource("1_xvlf0")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("CapsuleMesh_ectt0")

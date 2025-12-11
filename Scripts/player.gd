@@ -28,6 +28,10 @@ var fov_bonuses: float = 0.0
 @onready var camera = $Head/Camera3D
 @onready var raycast = $Head/Camera3D/ObjectDetector
 
+@export var cubo_scene: PackedScene  
+@export var spawn_area: Node3D    
+
+
 var gravity: float = 9.8
 var crouched: bool = false
 var current_interactable = null
@@ -44,6 +48,9 @@ func _unhandled_input(event):
 func _physics_process(delta):
 	if Input.is_action_just_pressed("interact"):
 		interact()
+	
+	if Input.is_action_just_pressed("reset_clones"):
+		apagar_clones()
 	
 	if Input.is_action_just_pressed("crouch_stand") and is_on_floor():
 		if is_crouching:
@@ -138,7 +145,50 @@ func hide_current_label():
 		current_interactable = null
 
 func interact():
-	var hit = raycast.get_collider()
 	if raycast.is_colliding():
-		if hit and hit.has_method("interact"):
+		var hit = raycast.get_collider()
+		if hit == null:
+			return
+		
+		var root_node = hit
+		while root_node.get_parent() != null and not root_node.is_in_group("cubo_original"):
+			root_node = root_node.get_parent()
+		
+		if root_node.is_in_group("cubo_original"):
+			spawn_cubo_na_area()
+		elif hit.has_method("interact"):
 			hit.interact()
+
+func random_position_in_area() -> Vector3:
+	if spawn_area == null:
+		print("ERRO: spawn_area não definido!")
+		return global_transform.origin
+	
+	var shape = spawn_area.get_node("CollisionShape3D").shape
+	if shape == null:
+		return spawn_area.global_transform.origin
+	
+	var extents = shape.extents
+	var random_offset = Vector3(
+		randf_range(-extents.x, extents.x),
+		randf_range(-extents.y, extents.y),
+		randf_range(-extents.z, extents.z)
+	)
+	return spawn_area.global_transform.origin + random_offset
+
+func spawn_cubo_na_area():
+	if cubo_scene == null or spawn_area == null:
+		print("ERRO: cubo_scene ou spawn_area não definidos!")
+		return
+	
+	var novo_cubo = cubo_scene.instantiate()
+	novo_cubo.global_transform.origin = random_position_in_area()
+	novo_cubo.add_to_group("clones")
+	get_tree().current_scene.add_child(novo_cubo)
+
+func apagar_clones():
+	var clones = get_tree().get_nodes_in_group("clones")
+	for c in clones:
+		if is_instance_valid(c):
+			c.queue_free()
+	print("Clones apagados. Agora:", get_tree().get_nodes_in_group("clones").size())
