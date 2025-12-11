@@ -1,0 +1,45 @@
+[gd_scene load_steps=7 format=3 uid="uid://dbc6odv0qj6g4"]
+
+[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
+[ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
+[ext_resource type="Material" uid="uid://c1bbkc1w2xxoa" path="res://materials/visible_mat.tres" id="3_51vxp"]
+[ext_resource type="Script" uid="uid://minq3fibfxbc" path="res://scripts_invis_mode/turn_invisible.gd" id="4_bus37"]
+
+[sub_resource type="Environment" id="Environment_dhrl6"]
+background_mode = 2
+background_color = Color(0.5973062, 0.87649775, 0.99999994, 1)
+sky = ExtResource("2_uath2")
+ambient_light_source = 3
+reflected_light_source = 2
+ssao_enabled = true
+ssil_radius = 9.06
+glow_enabled = true
+
+[sub_resource type="Compositor" id="Compositor_uath2"]
+
+[node name="Main" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.96986353, 0.24364886, 0, -0.24364886, 0.96986353, 0, 1.3884219, 0)
+light_energy = 3.244
+light_angular_distance = 4.77
+shadow_enabled = true
+
+[node name="Character" parent="." instance=ExtResource("1_dhrl6")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, -0.068484426, 0)
+default_reticle = null
+
+[node name="ground" type="CSGBox3D" parent="."]
+transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, -6.337537, -0.7122039, 7.6489296)
+use_collision = true
+size = Vector3(4.3872375, 1, 2.058838)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_dhrl6")
+compositor = SubResource("Compositor_uath2")
+
+[node name="cube test" type="CSGBox3D" parent="."]
+transform = Transform3D(0.34452826, 0, -0.9387759, 0, 1, 0, 0.9387759, 0, 0.34452826, -2.0474856, 1.8218553, 2.1246111)
+material_override = ExtResource("3_51vxp")
+use_collision = true
+script = ExtResource("4_bus37")

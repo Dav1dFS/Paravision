@@ -1,4 +1,11 @@
-# COPYRIGHT Colormatic Studios
+[gd_scene load_steps=6 format=3 uid="uid://dbc6odv0qj6g4"]
+
+[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
+[ext_resource type="PackedScene" uid="uid://cn74fkk5e6ars" path="res://Scenes/cubo.tscn" id="2_uath2"]
+[ext_resource type="Script" uid="uid://i1hhb7e0ala2" path="res://Scenes/cubo.gd" id="3_xq1w2"]
+
+[sub_resource type="GDScript" id="GDScript_uath2"]
+script/source = "# COPYRIGHT Colormatic Studios
 # MIT license
 # Quality Godot First Person Controller v2
 
@@ -9,7 +16,7 @@ extends CharacterBody3D
 #region Character Export Group
 
 ## The settings for the character's movement and feel.
-@export_category("Character")
+@export_category(\"Character\")
 ## The speed that the character moves at without crouching or sprinting.
 @export var base_speed : float = 3.0
 ## The speed that the character moves at when sprinting.
@@ -36,7 +43,7 @@ extends CharacterBody3D
 
 #region Nodes Export Group
 
-@export_group("Nodes")
+@export_group(\"Nodes\")
 ## A reference to the camera for use in the character script. This is the parent node to the camera and is rotated instead of the camera for mouse input.
 @export var HEAD : Node3D
 ## A reference to the camera for use in the character script.
@@ -55,27 +62,27 @@ extends CharacterBody3D
 #region Controls Export Group
 
 # We are using UI controls because they are built into Godot Engine so they can be used right away
-@export_group("Controls")
+@export_group(\"Controls\")
 ## Use the Input Map to map a mouse/keyboard input to an action and add a reference to it to this dictionary to be used in the script.
 @export var controls : Dictionary = {
-	LEFT = "ui_left",
-	RIGHT = "ui_right",
-	FORWARD = "ui_up",
-	BACKWARD = "ui_down",
-	JUMP = "ui_accept",
-	CROUCH = "crouch",
-	SPRINT = "sprint",
-	PAUSE = "ui_cancel"
+	LEFT = \"ui_left\",
+	RIGHT = \"ui_right\",
+	FORWARD = \"ui_up\",
+	BACKWARD = \"ui_down\",
+	JUMP = \"ui_accept\",
+	CROUCH = \"crouch\",
+	SPRINT = \"sprint\",
+	PAUSE = \"ui_cancel\"
 	}
-@export_subgroup("Controller Specific")
+@export_subgroup(\"Controller Specific\")
 ## This only affects how the camera is handled, the rest should be covered by adding controller inputs to the existing actions in the Input Map.
 @export var controller_support : bool = false
 ## Use the Input Map to map a controller input to an action and add a reference to it to this dictionary to be used in the script.
 @export var controller_controls : Dictionary = {
-	LOOK_LEFT = "look_left",
-	LOOK_RIGHT = "look_right",
-	LOOK_UP = "look_up",
-	LOOK_DOWN = "look_down"
+	LOOK_LEFT = \"look_left\",
+	LOOK_RIGHT = \"look_right\",
+	LOOK_UP = \"look_up\",
+	LOOK_DOWN = \"look_down\"
 	}
 ## The sensitivity of the analog stick that controls camera rotation. Lower is less sensitive and higher is more sensitive.
 @export_range(0.001, 1, 0.001) var look_sensitivity : float = 0.035
@@ -84,7 +91,7 @@ extends CharacterBody3D
 
 #region Feature Settings Export Group
 
-@export_group("Feature Settings")
+@export_group(\"Feature Settings\")
 ## Enable or disable jumping. Useful for restrictive storytelling environments.
 @export var jumping_enabled : bool = true
 ## Whether the player can move in the air or not.
@@ -94,11 +101,11 @@ extends CharacterBody3D
 ## Enables or disables sprinting.
 @export var sprint_enabled : bool = true
 ## Toggles the sprinting state when button is pressed or requires the player to hold the button down to remain sprinting.
-@export_enum("Hold to Sprint", "Toggle Sprint") var sprint_mode : int = 0
+@export_enum(\"Hold to Sprint\", \"Toggle Sprint\") var sprint_mode : int = 0
 ## Enables or disables crouching.
 @export var crouch_enabled : bool = true
 ## Toggles the crouch state when button is pressed or requires the player to hold the button down to remain crouched.
-@export_enum("Hold to Crouch", "Toggle Crouch") var crouch_mode : int = 0
+@export_enum(\"Hold to Crouch\", \"Toggle Crouch\") var crouch_mode : int = 0
 ## Wether sprinting should effect FOV.
 @export var dynamic_fov : bool = true
 ## If the player holds down the jump button, should the player keep hopping.
@@ -121,12 +128,15 @@ extends CharacterBody3D
 
 @export var cubo_scene: PackedScene  # Arrasta o Cubo.tscn no Inspector
 @export var interacao_distancia: float = 5.0  # alcance máximo para interagir
+@export var spawn_area: Node3D             # Arraste o Node3D que define a área
+
+
 
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed : float = base_speed
 var current_speed : float = 0.0
 # States: normal, crouching, sprinting
-var state : String = "normal"
+var state : String = \"normal\"
 var low_ceiling : bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor : bool = true # Was the player on the floor last frame (for landing animation)
 
@@ -134,7 +144,7 @@ var was_on_floor : bool = true # Was the player on the floor last frame (for lan
 var RETICLE : Control
 
 # Get the gravity from the project settings to be synced with RigidBody nodes
-var gravity : float = ProjectSettings.get_setting("physics/3d/default_gravity") # Don't set this as a const, see the gravity section in _physics_process
+var gravity : float = ProjectSettings.get_setting(\"physics/3d/default_gravity\") # Don't set this as a const, see the gravity section in _physics_process
 
 # Stores mouse input for rotating the camera in the physics process
 var mouseInput : Vector2 = Vector2(0,0)
@@ -160,23 +170,40 @@ func _ready():
 	check_controls()
 	enter_normal_state()
 	
-	if OS.get_name() == "Web":
+	if OS.get_name() == \"Web\":
 		Input.set_use_accumulated_input(false)
 
 
 func _process(_delta):
-	
-	
+	if Input.is_action_just_pressed(\"interact\"):
+		spawn_cubo_na_area()
+		
+	if Input.is_action_just_pressed(\"reset_clones\"):
+		apagar_clones()
 
-	
+
+func random_position_in_area() -> Vector3:
+	if spawn_area == null:
+		print(\"ERRO: Não arrastaste a spawn_area no Inspector!\")
+		return Vector3.ZERO
+
+	var shape = spawn_area.get_node(\"CollisionShape3D\").shape
+	if shape == null:
+		return spawn_area.global_transform.origin
+
+	var extents = shape.extents
+	var random_offset = Vector3(
+		randf_range(-extents.x, extents.x),
+		randf_range(-extents.y, extents.y),
+		randf_range(-extents.z, extents.z)
+	)
+	return spawn_area.global_transform.origin + random_offset
+
 	if pausing_enabled:
 		handle_pausing()
-	
+
 	update_debug_menu_per_frame()
-	
-	# ADICIONAR AQUI:
-	if Input.is_key_pressed(KEY_E):
-		spawn_cubo_olhando()
+
 
 	
 	if pausing_enabled:
@@ -188,7 +215,7 @@ func _process(_delta):
 func _physics_process(delta): # Most things happen here.
 	# Gravity
 	if dynamic_gravity:
-		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+		gravity = ProjectSettings.get_setting(\"physics/3d/default_gravity\")
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
 
@@ -229,12 +256,12 @@ func handle_jumping():
 		if continuous_jumping: # Hold down the jump button
 			if Input.is_action_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
 				if jump_animation:
-					JUMP_ANIMATION.play("jump", 0.25)
+					JUMP_ANIMATION.play(\"jump\", 0.25)
 				velocity.y += jump_velocity # Adding instead of setting so jumping on slopes works properly
 		else:
 			if Input.is_action_just_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
 				if jump_animation:
-					JUMP_ANIMATION.play("jump", 0.25)
+					JUMP_ANIMATION.play(\"jump\", 0.25)
 				velocity.y += jump_velocity
 
 
@@ -290,28 +317,28 @@ func handle_head_rotation():
 func check_controls(): # If you add a control, you might want to add a check for it here.
 	# The actions are being disabled so the engine doesn't halt the entire project in debug mode
 	if !InputMap.has_action(controls.JUMP):
-		push_error("No control mapped for jumping. Please add an input map control. Disabling jump.")
+		push_error(\"No control mapped for jumping. Please add an input map control. Disabling jump.\")
 		jumping_enabled = false
 	if !InputMap.has_action(controls.LEFT):
-		push_error("No control mapped for move left. Please add an input map control. Disabling movement.")
+		push_error(\"No control mapped for move left. Please add an input map control. Disabling movement.\")
 		immobile = true
 	if !InputMap.has_action(controls.RIGHT):
-		push_error("No control mapped for move right. Please add an input map control. Disabling movement.")
+		push_error(\"No control mapped for move right. Please add an input map control. Disabling movement.\")
 		immobile = true
 	if !InputMap.has_action(controls.FORWARD):
-		push_error("No control mapped for move forward. Please add an input map control. Disabling movement.")
+		push_error(\"No control mapped for move forward. Please add an input map control. Disabling movement.\")
 		immobile = true
 	if !InputMap.has_action(controls.BACKWARD):
-		push_error("No control mapped for move backward. Please add an input map control. Disabling movement.")
+		push_error(\"No control mapped for move backward. Please add an input map control. Disabling movement.\")
 		immobile = true
 	if !InputMap.has_action(controls.PAUSE):
-		push_error("No control mapped for pause. Please add an input map control. Disabling pausing.")
+		push_error(\"No control mapped for pause. Please add an input map control. Disabling pausing.\")
 		pausing_enabled = false
 	if !InputMap.has_action(controls.CROUCH):
-		push_error("No control mapped for crouch. Please add an input map control. Disabling crouching.")
+		push_error(\"No control mapped for crouch. Please add an input map control. Disabling crouching.\")
 		crouch_enabled = false
 	if !InputMap.has_action(controls.SPRINT):
-		push_error("No control mapped for sprint. Please add an input map control. Disabling sprinting.")
+		push_error(\"No control mapped for sprint. Please add an input map control. Disabling sprinting.\")
 		sprint_enabled = false
 
 #endregion
@@ -321,67 +348,67 @@ func check_controls(): # If you add a control, you might want to add a check for
 func handle_state(moving):
 	if sprint_enabled:
 		if sprint_mode == 0:
-			if Input.is_action_pressed(controls.SPRINT) and state != "crouching":
+			if Input.is_action_pressed(controls.SPRINT) and state != \"crouching\":
 				if moving:
-					if state != "sprinting":
+					if state != \"sprinting\":
 						enter_sprint_state()
 				else:
-					if state == "sprinting":
+					if state == \"sprinting\":
 						enter_normal_state()
-			elif state == "sprinting":
+			elif state == \"sprinting\":
 				enter_normal_state()
 		elif sprint_mode == 1:
 			if moving:
 				# If the player is holding sprint before moving, handle that scenario
-				if Input.is_action_pressed(controls.SPRINT) and state == "normal":
+				if Input.is_action_pressed(controls.SPRINT) and state == \"normal\":
 					enter_sprint_state()
 				if Input.is_action_just_pressed(controls.SPRINT):
 					match state:
-						"normal":
+						\"normal\":
 							enter_sprint_state()
-						"sprinting":
+						\"sprinting\":
 							enter_normal_state()
-			elif state == "sprinting":
+			elif state == \"sprinting\":
 				enter_normal_state()
 
 	if crouch_enabled:
 		if crouch_mode == 0:
-			if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
-				if state != "crouching":
+			if Input.is_action_pressed(controls.CROUCH) and state != \"sprinting\":
+				if state != \"crouching\":
 					enter_crouch_state()
-			elif state == "crouching" and !$CrouchCeilingDetection.is_colliding():
+			elif state == \"crouching\" and !$CrouchCeilingDetection.is_colliding():
 				enter_normal_state()
 		elif crouch_mode == 1:
 			if Input.is_action_just_pressed(controls.CROUCH):
 				match state:
-					"normal":
+					\"normal\":
 						enter_crouch_state()
-					"crouching":
+					\"crouching\":
 						if !$CrouchCeilingDetection.is_colliding():
 							enter_normal_state()
 
 
 # Any enter state function should only be called once when you want to enter that state, not every frame.
 func enter_normal_state():
-	#print("entering normal state")
+	#print(\"entering normal state\")
 	var prev_state = state
-	if prev_state == "crouching":
-		CROUCH_ANIMATION.play_backwards("crouch")
-	state = "normal"
+	if prev_state == \"crouching\":
+		CROUCH_ANIMATION.play_backwards(\"crouch\")
+	state = \"normal\"
 	speed = base_speed
 
 func enter_crouch_state():
-	#print("entering crouch state")
-	state = "crouching"
+	#print(\"entering crouch state\")
+	state = \"crouching\"
 	speed = crouch_speed
-	CROUCH_ANIMATION.play("crouch")
+	CROUCH_ANIMATION.play(\"crouch\")
 
 func enter_sprint_state():
-	#print("entering sprint state")
+	#print(\"entering sprint state\")
 	var prev_state = state
-	if prev_state == "crouching":
-		CROUCH_ANIMATION.play_backwards("crouch")
-	state = "sprinting"
+	if prev_state == \"crouching\":
+		CROUCH_ANIMATION.play_backwards(\"crouch\")
+	state = \"sprinting\"
 	speed = sprint_speed
 
 #endregion
@@ -391,18 +418,18 @@ func enter_sprint_state():
 func initialize_animations():
 	# Reset the camera position
 	# If you want to change the default head height, change these animations.
-	HEADBOB_ANIMATION.play("RESET")
-	JUMP_ANIMATION.play("RESET")
-	CROUCH_ANIMATION.play("RESET")
+	HEADBOB_ANIMATION.play(\"RESET\")
+	JUMP_ANIMATION.play(\"RESET\")
+	CROUCH_ANIMATION.play(\"RESET\")
 
 func play_headbob_animation(moving):
 	if moving and is_on_floor():
 		var use_headbob_animation : String
 		match state:
-			"normal","crouching":
-				use_headbob_animation = "walk"
-			"sprinting":
-				use_headbob_animation = "sprint"
+			\"normal\",\"crouching\":
+				use_headbob_animation = \"walk\"
+			\"sprinting\":
+				use_headbob_animation = \"sprint\"
 
 		var was_playing : bool = false
 		if HEADBOB_ANIMATION.current_animation == use_headbob_animation:
@@ -418,9 +445,9 @@ func play_headbob_animation(moving):
 			# This code is extremely performant but it makes no sense.
 
 	else:
-		if HEADBOB_ANIMATION.current_animation == "sprint" or HEADBOB_ANIMATION.current_animation == "walk":
+		if HEADBOB_ANIMATION.current_animation == \"sprint\" or HEADBOB_ANIMATION.current_animation == \"walk\":
 			HEADBOB_ANIMATION.speed_scale = 1
-			HEADBOB_ANIMATION.play("RESET", 1)
+			HEADBOB_ANIMATION.play(\"RESET\", 1)
 
 func play_jump_animation():
 	if !was_on_floor and is_on_floor(): # The player just landed
@@ -432,37 +459,37 @@ func play_jump_animation():
 		var side_landed : int = round(velocity_2D.dot(facing_direction_2D))
 
 		if side_landed > 0:
-			JUMP_ANIMATION.play("land_right", 0.25)
+			JUMP_ANIMATION.play(\"land_right\", 0.25)
 		elif side_landed < 0:
-			JUMP_ANIMATION.play("land_left", 0.25)
+			JUMP_ANIMATION.play(\"land_left\", 0.25)
 		else:
-			JUMP_ANIMATION.play("land_center", 0.25)
+			JUMP_ANIMATION.play(\"land_center\", 0.25)
 
 #endregion
 
 #region Debug Menu
 
 func update_debug_menu_per_frame():
-	$UserInterface/DebugPanel.add_property("FPS", Performance.get_monitor(Performance.TIME_FPS), 0)
+	$UserInterface/DebugPanel.add_property(\"FPS\", Performance.get_monitor(Performance.TIME_FPS), 0)
 	var status : String = state
 	if !is_on_floor():
-		status += " in the air"
-	$UserInterface/DebugPanel.add_property("State", status, 4)
+		status += \" in the air\"
+	$UserInterface/DebugPanel.add_property(\"State\", status, 4)
 
 
 func update_debug_menu_per_tick():
 	# Big thanks to github.com/LorenzoAncora for the concept of the improved debug values
 	current_speed = Vector3.ZERO.distance_to(get_real_velocity())
-	$UserInterface/DebugPanel.add_property("Speed", snappedf(current_speed, 0.001), 1)
-	$UserInterface/DebugPanel.add_property("Target speed", speed, 2)
+	$UserInterface/DebugPanel.add_property(\"Speed\", snappedf(current_speed, 0.001), 1)
+	$UserInterface/DebugPanel.add_property(\"Target speed\", speed, 2)
 	var cv : Vector3 = get_real_velocity()
 	var vd : Array[float] = [
 		snappedf(cv.x, 0.001),
 		snappedf(cv.y, 0.001),
 		snappedf(cv.z, 0.001)
 	]
-	var readable_velocity : String = "X: " + str(vd[0]) + " Y: " + str(vd[1]) + " Z: " + str(vd[2])
-	$UserInterface/DebugPanel.add_property("Velocity", readable_velocity, 3)
+	var readable_velocity : String = \"X: \" + str(vd[0]) + \" Y: \" + str(vd[1]) + \" Z: \" + str(vd[2])
+	$UserInterface/DebugPanel.add_property(\"Velocity\", readable_velocity, 3)
 
 
 func _unhandled_input(event : InputEvent):
@@ -489,7 +516,7 @@ func change_reticle(reticle): # Yup, this function is kinda strange
 
 
 func update_camera_fov():
-	if state == "sprinting":
+	if state == \"sprinting\":
 		CAMERA.fov = lerp(CAMERA.fov, 85.0, 0.3)
 	else:
 		CAMERA.fov = lerp(CAMERA.fov, 75.0, 0.3)
@@ -506,33 +533,89 @@ func handle_pausing():
 				#get_tree().paused = false
 				
 
-func spawn_cubo_olhando():
+func spawn_cubo_na_area():
 	if cubo_scene == null:
-		print("ERRO: Não arrastaste o Cubo.tscn para 'cubo_scene' no Inspector!")
+		print(\"ERRO: Não arrastaste a Cubo.tscn para 'cubo_scene' no Inspector!\")
 		return
 
-	# Criar um ray a partir da câmera na direção que o player está olhando
-	var from = CAMERA.global_transform.origin
-	var to = from + CAMERA.global_transform.basis.z * interacao_distancia
+	# Limite de clones (opcional)
+	var max_clones := 5
+	var num_clones := get_tree().get_nodes_in_group(\"clones\").size()
+	if num_clones >= max_clones:
+		print(\"Limite de clones atingido!\")
+		return
 
-	# Configurar os parâmetros do raycast
-	var ray_params = PhysicsRayQueryParameters3D.new()
-	ray_params.from = from
-	ray_params.to = to
-	ray_params.exclude = [self]  # ignora o player
+	# Instancia o cubo
+	var novo_cubo = cubo_scene.instantiate()
 
-	# Fazer o raycast
-	var space_state = get_world_3d().direct_space_state
-	var result = space_state.intersect_ray(ray_params)
+	# Garante que só clones do original são criados
+	if novo_cubo.has_method(\"is_clone\") and novo_cubo.is_clone:
+		print(\"Não é permitido clonar clones!\")
+		return
+	novo_cubo.is_clone = true # marca como clone
+	novo_cubo.add_to_group(\"clones\")
 
-	if result:
-		var objeto = result.collider
-		if objeto is MeshInstance3D:
-			# Instancia o cubo exatamente na posição do objeto
-			var novo_cubo = cubo_scene.instantiate()
-			novo_cubo.global_transform = objeto.global_transform
-			get_tree().current_scene.add_child(novo_cubo)
+	# Adiciona primeiro à cena
+	get_tree().current_scene.add_child(novo_cubo)
+
+	# Pega posição aleatória dentro da área
+	var pos_aleatoria = random_position_in_area()
+	novo_cubo.global_transform.origin = pos_aleatoria
+
+	# Copia rotação e escala do original (assumindo que cubo_scene é o original)
+	var cubo_original = cubo_scene.instantiate()
+	novo_cubo.global_transform.basis = cubo_original.global_transform.basis
+	if novo_cubo.has_node(\"MeshInstance3D\") and cubo_original.has_node(\"MeshInstance3D\"):
+		novo_cubo.get_node(\"MeshInstance3D\").scale = cubo_original.get_node(\"MeshInstance3D\").scale
+
+
+
+			
+func apagar_clones():
+	var clones = get_tree().get_nodes_in_group(\"clones\")
+	for c in clones:
+		if is_instance_valid(c):
+			c.queue_free()
+	print(\"Clones apagados. Agora:\", get_tree().get_nodes_in_group(\"clones\").size())
+
+
+
+
+
+
 
 
 
 #endregion
+"
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_uath2"]
+size = Vector3(2, 0.332, 2)
+
+[node name="Main" type="Node3D"]
+
+[node name="Character" parent="." node_paths=PackedStringArray("spawn_area") instance=ExtResource("1_dhrl6")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
+script = SubResource("GDScript_uath2")
+default_reticle = null
+cubo_scene = ExtResource("2_uath2")
+interacao_distancia = 10.0
+spawn_area = NodePath("../SpawnArea")
+
+[node name="chao" type="CSGBox3D" parent="."]
+transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, 0, -0.7, 0)
+use_collision = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.060612977, 0.9981613, 0, -0.9981613, -0.060612977, 0, 7.0430126, 0)
+
+[node name="Node3D" parent="." instance=ExtResource("2_uath2")]
+transform = Transform3D(0.305, 0, 0, 0, 0.305, 0, 0, 0, 0.305, -0.41530418, 1.217, 4.441)
+script = ExtResource("3_xq1w2")
+
+[node name="SpawnArea" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4188761, 1.2219589, 4.4459267)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SpawnArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0074768066, 0)
+shape = SubResource("BoxShape3D_uath2")
