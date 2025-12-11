@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 var speed 	
-const JUMP_VELOCITY: float = 4.5
+@export var JUMP_VELOCITY: float = 4.5
 const WALK_SPEED: float = 4.5
 const SPRINT_SPEED: float = 8.0
 const CROUCH_SPEED: float = 2.0
@@ -31,6 +31,14 @@ var fov_bonuses: float = 0.0
 var gravity: float = 9.8
 var crouched: bool = false
 var current_interactable = null
+
+
+#gravity anchor stuff
+var inverted: bool
+var north: bool
+
+@export var UI_Parent_Node:Control
+
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -64,7 +72,10 @@ func _physics_process(delta):
 	capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
 
 	if not is_on_floor():
-		velocity.y -= gravity * delta
+		if  north == false:
+			velocity.y -= gravity * delta
+		if north == true:
+			velocity.x -= gravity * delta
 
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		velocity.y = JUMP_VELOCITY
@@ -74,8 +85,12 @@ func _physics_process(delta):
 
 	if is_on_floor():
 		if direction:
-			velocity.x = direction.x * speed
-			velocity.z = direction.z * speed
+			if inverted == false:
+				velocity.x = direction.x * speed
+				velocity.z = direction.z * speed
+			elif inverted == true:
+				velocity.x = direction.x * speed
+				velocity.z = -direction.z * speed	
 		else:
 			velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
 			velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
@@ -142,3 +157,23 @@ func interact():
 	if raycast.is_colliding():
 		if hit and hit.has_method("interact"):
 			hit.interact()
+
+
+func _on_down_pressed() -> void:
+	inverted = false
+	north = false
+	
+	#ativar north
+	
+
+
+func _on_up_pressed() -> void:
+	inverted = true
+	
+	#desativar north
+
+
+func _on_north_pressed() -> void:
+	north = true
+	#desativar north, up button e deixar o down ativo
+	

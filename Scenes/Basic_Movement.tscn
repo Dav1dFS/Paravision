@@ -1,9 +1,61 @@
-[gd_scene load_steps=12 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=16 format=3 uid="uid://dbc6odv0qj6g4"]
 
 [ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
 [ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
 [ext_resource type="Script" uid="uid://cfphimfb0uamd" path="res://Scripts/gravity_anchor/gravity_anchor.gd" id="2_xq1w2"]
 [ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="4_51vxp"]
+
+[sub_resource type="Animation" id="Animation_bus37"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_51vxp"]
+resource_name = "idle"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_pdb4r"]
+resource_name = "inverted"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(3.1415927, -3.1415927, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nfju6"]
+_data = {
+&"RESET": SubResource("Animation_bus37"),
+&"idle": SubResource("Animation_51vxp"),
+&"inverted": SubResource("Animation_pdb4r")
+}
 
 [sub_resource type="Environment" id="Environment_dhrl6"]
 background_mode = 2
@@ -38,7 +90,12 @@ light_energy = 3.244
 shadow_enabled = true
 
 [node name="Character" parent="." instance=ExtResource("1_dhrl6")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.4074702, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4074702, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Character"]
+libraries = {
+&"": SubResource("AnimationLibrary_nfju6")
+}
 
 [node name="ground" type="CSGBox3D" parent="."]
 transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, -6.337537, -3.7107391, 7.6489296)
@@ -89,7 +146,7 @@ shape = SubResource("BoxShape3D_51vxp")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D"]
 mesh = SubResource("BoxMesh_bus37")
 
-[node name="Gravity_Anchor_UI_Parent" type="Control" parent="." node_paths=PackedStringArray("UI_Parent_Node", "Player", "up_button", "down_button")]
+[node name="Gravity_Anchor_UI_Parent" type="Control" parent="." node_paths=PackedStringArray("UI_Parent_Node", "Player", "up_button", "down_button", "player_anim_player")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -101,6 +158,7 @@ UI_Parent_Node = NodePath(".")
 Player = NodePath("../Character")
 up_button = NodePath("UP")
 down_button = NodePath("DOWN")
+player_anim_player = NodePath("../Character/AnimationPlayer")
 
 [node name="Y AXIS Label" type="Label" parent="Gravity_Anchor_UI_Parent"]
 layout_mode = 1

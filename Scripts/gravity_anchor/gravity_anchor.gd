@@ -8,13 +8,22 @@ extends Node
 
 @export var down_button:Button
 
+@export var player_anim_player:AnimationPlayer  
+
 var gravity_toggle:bool
 
 var player_pos: Vector3
 
+var inverted: bool
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	gravity_toggle = false
+	
+	player_anim_player.play("idle")
+	
+	
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -37,37 +46,38 @@ func gravity_toggle_func() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func change_gravity(gravity_vel: float, player_dir: Vector3, jump_vel: float,
- pos_offset: float, rot_angle: float, up_btn_bool: bool, down_btn_bool: bool, msg: String, rot_x: bool, rot_y: bool) -> void:
+up_btn_bool: bool, down_btn_bool: bool, msg: String,anim_name: String, anim_name_2: String, anim_bool: bool) -> void:
 	
-	#1 - adjust player to make it neat: Mouse Input PROBLEMS and rotation Problems
-	Player.position = Vector3 (Player.position.x, Player.position.y + pos_offset, Player.position.z)
-	Player.rotate(Vector3(1, 0 ,0), Player.rotation.x + rot_angle)
-	Player.rotation.z = 0
-	#Player.invert_camera_x_axis = rot_x
-	#Player.invert_camera_x_axis = rot_ys
-	
-	
-	
-	#2 - changes gravity : DONE
+	#1 - adjust player to make it neat:	
+	if inverted == anim_bool:
+		player_anim_player.play(anim_name)
+		if player_anim_player.is_playing() == false:
+				player_anim_player.play(anim_name_2)
+
+
+	#2 - change gravity
 	PhysicsServer3D.area_set_param(get_viewport().find_world_3d().space, PhysicsServer3D.AREA_PARAM_GRAVITY, gravity_vel)
 	Player.gravity = gravity_vel
 	Player.up_direction = player_dir
-	Player.jump_velocity = jump_vel
+	Player.JUMP_VELOCITY = jump_vel
 	
 	
-	
-	#3 - stops people from messing with the gravity further: DONE
+	#3 - stop people from messing with the gravity further: DONE
 	up_button.disabled = up_btn_bool
 	down_button.disabled = down_btn_bool
 	
-	#4 -  returns back to gameplay: DONE
+	#4 -  return back to gameplay: DONE
 	gravity_toggle = false
 	print(msg)
 	
 
 func _on_up_pressed() -> void:
-	change_gravity(-9.8, Vector3.DOWN, -4.5, 1, 180, true, false, "you want up?", true, true)
+	inverted = true
+	change_gravity(-9.8, Vector3.DOWN, -4.5, true, false, "you want up?", "inverting", "inverted", true)
 
 
 func _on_down_pressed() -> void:
-	change_gravity(9.8, Vector3.UP, 4.5, -1, -180, false, true, "you goin doooown!", false, false)
+	inverted = false
+	change_gravity(9.8, Vector3.UP, 4.5, false, true, "you goin doooown!", "back_to_idle", "idle", false)
+
+	
