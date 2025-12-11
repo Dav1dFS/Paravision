@@ -131,6 +131,7 @@ extends CharacterBody3D
 @export var spawn_area: Node3D             # Arraste o Node3D que define a área
 
 
+
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed : float = base_speed
 var current_speed : float = 0.0
@@ -542,61 +543,40 @@ func handle_pausing():
 				#get_tree().paused = false
 				
 
-func spawn_cubo_olhando():
+func spawn_cubo_na_area():
 	if cubo_scene == null:
-		print(\"ERRO: Não arrastaste o Cubo.tscn para 'cubo_scene' no Inspector!\")
+		print(\"ERRO: Não arrastaste a Cubo.tscn para 'cubo_scene' no Inspector!\")
 		return
 
-	# Raycast para detectar o cubo que estás a olhar
-	var from = CAMERA.global_transform.origin
-	var forward = -CAMERA.global_transform.basis.z.normalized()
-	var to = from + forward * interacao_distancia
+	# Limite de clones (opcional)
+	var max_clones := 5
+	var num_clones := get_tree().get_nodes_in_group(\"clones\").size()
+	if num_clones >= max_clones:
+		print(\"Limite de clones atingido!\")
+		return
 
-	var ray_params = PhysicsRayQueryParameters3D.new()
-	ray_params.from = from
-	ray_params.to = to
-	ray_params.exclude = [self]
+	# Instancia o cubo
+	var novo_cubo = cubo_scene.instantiate()
 
-	var space_state = get_world_3d().direct_space_state
-	var result = space_state.intersect_ray(ray_params)
+	# Garante que só clones do original são criados
+	if novo_cubo.has_method(\"is_clone\") and novo_cubo.is_clone:
+		print(\"Não é permitido clonar clones!\")
+		return
+	novo_cubo.is_clone = true # marca como clone
+	novo_cubo.add_to_group(\"clones\")
 
-	if result:
-		var collider = result.collider
-		if collider == null:
-			return
-		
-		# Pega no Node3D pai do cubo (onde está o MeshInstance3D)
-		var cubo_pai = collider.get_parent()
-		if cubo_pai == null:
-			return
-		
-		# Verifica se o cubo alvo NÃO é um clone (só o original pode ser clonado)
-		if cubo_pai.has_meta(\"is_clone\") and cubo_pai.get_meta(\"is_clone\") == true:
-			return
+	# Adiciona primeiro à cena
+	get_tree().current_scene.add_child(novo_cubo)
 
-		# Limite de clones (ex: 5)
-		var num_clones = get_tree().get_nodes_in_group(\"clones\").size()
-		var max_clones = 5
-		if num_clones >= max_clones:
-			print(\"Limite de clones atingido!\")
-			return
+	# Pega posição aleatória dentro da área
+	var pos_aleatoria = random_position_in_area()
+	novo_cubo.global_transform.origin = pos_aleatoria
 
-		# Cria o clone
-		var novo_cubo = cubo_scene.instantiate()
-		
-		# Copiar posição e rotação do cubo original
-		novo_cubo.global_transform = cubo_pai.global_transform
-		
-		# Copiar escala do MeshInstance3D para manter tamanho exato
-		novo_cubo.get_node(\"MeshInstance3D\").scale = cubo_pai.get_node(\"MeshInstance3D\").scale
-		
-		# Marca como clone e adiciona ao grupo
-		novo_cubo.set_meta(\"is_clone\", true)
-		novo_cubo.add_to_group(\"clones\")
-		
-		# Adiciona à cena
-		get_tree().current_scene.add_child(novo_cubo)
-
+	# Copia rotação e escala do original (assumindo que cubo_scene é o original)
+	var cubo_original = cubo_scene.instantiate()
+	novo_cubo.global_transform.basis = cubo_original.global_transform.basis
+	if novo_cubo.has_node(\"MeshInstance3D\") and cubo_original.has_node(\"MeshInstance3D\"):
+		novo_cubo.get_node(\"MeshInstance3D\").scale = cubo_original.get_node(\"MeshInstance3D\").scale
 
 
 
@@ -627,7 +607,34 @@ size = Vector3(2, 0.332, 2)
 [node name="Character" parent="." node_paths=PackedStringArray("spawn_area") instance=ExtResource("1_dhrl6")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 script = SubResource("GDScript_uath2")
+base_speed = null
+sprint_speed = null
+crouch_speed = null
+acceleration = null
+jump_velocity = null
+mouse_sensitivity = null
+invert_camera_x_axis = null
+invert_camera_y_axis = null
+immobile = null
 default_reticle = null
+controls = null
+controller_support = null
+controller_controls = null
+look_sensitivity = null
+jumping_enabled = null
+in_air_momentum = null
+motion_smoothing = null
+sprint_enabled = null
+sprint_mode = null
+crouch_enabled = null
+crouch_mode = null
+dynamic_fov = null
+continuous_jumping = null
+view_bobbing = null
+jump_animation = null
+pausing_enabled = null
+gravity_enabled = null
+dynamic_gravity = null
 cubo_scene = ExtResource("2_uath2")
 interacao_distancia = 10.0
 spawn_area = NodePath("../SpawnArea")

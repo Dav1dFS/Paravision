@@ -129,6 +129,7 @@ extends CharacterBody3D
 @export var cubo_scene: PackedScene  # Arrasta o Cubo.tscn no Inspector
 @export var interacao_distancia: float = 5.0  # alcance máximo para interagir
 @export var spawn_area: Node3D             # Arraste o Node3D que define a área
+@export var max_clones: int = 5
 
 
 # These are variables used in this script that don't need to be exposed in the editor.
@@ -544,10 +545,18 @@ func handle_pausing():
 
 func spawn_cubo_olhando():
 	if cubo_scene == null:
-		print(\"ERRO: Não arrastaste o Cubo.tscn para 'cubo_scene' no Inspector!\")
+		print(\"ERRO: cubo_scene NULL\")
+		return
+	if CAMERA == null:
+		print(\"ERRO: CAMERA NULL\")
 		return
 
-	# Raycast para detectar o cubo que estás a olhar
+	# Contar clones atuais
+	var num_clones = get_tree().get_nodes_in_group(\"clones\").size()
+	if num_clones >= max_clones:
+		print(\"Limite de clones atingido! (\", num_clones, \"/\", max_clones, \")\")
+		return
+
 	var from = CAMERA.global_transform.origin
 	var forward = -CAMERA.global_transform.basis.z.normalized()
 	var to = from + forward * interacao_distancia
@@ -557,48 +566,41 @@ func spawn_cubo_olhando():
 	ray_params.to = to
 	ray_params.exclude = [self]
 
-	var space_state = get_world_3d().direct_space_state
-	var result = space_state.intersect_ray(ray_params)
+	var result = get_world_3d().direct_space_state.intersect_ray(ray_params)
+	if not result:
+		# opcional: print(\"Raycast não acertou\")
+		return
 
-	if result:
-		var collider = result.collider
-		if collider == null:
-			return
-		
-		# Pega no Node3D pai do cubo (onde está o MeshInstance3D)
-		var cubo_pai = collider.get_parent()
-		if cubo_pai == null:
-			return
-		
-		# Verifica se o cubo alvo NÃO é um clone (só o original pode ser clonado)
-		if cubo_pai.has_meta(\"is_clone\") and cubo_pai.get_meta(\"is_clone\") == true:
-			return
+	var collider = result.get(\"collider\", null)
+	if collider == null:
+		return
 
-		# Limite de clones (ex: 5)
-		var num_clones = get_tree().get_nodes_in_group(\"clones\").size()
-		var max_clones = 5
-		if num_clones >= max_clones:
-			print(\"Limite de clones atingido!\")
-			return
+	var cubo_pai = null
+	if collider.get_parent() != null:
+		cubo_pai = collider.get_parent()
+	else:
+		cubo_pai = collider
 
-		# Cria o clone
-		var novo_cubo = cubo_scene.instantiate()
-		
-		# Copiar posição e rotação do cubo original
-		novo_cubo.global_transform = cubo_pai.global_transform
-		
-		# Copiar escala do MeshInstance3D para manter tamanho exato
-		novo_cubo.get_node(\"MeshInstance3D\").scale = cubo_pai.get_node(\"MeshInstance3D\").scale
-		
-		# Marca como clone e adiciona ao grupo
-		novo_cubo.set_meta(\"is_clone\", true)
-		novo_cubo.add_to_group(\"clones\")
-		
-		# Adiciona à cena
-		get_tree().current_scene.add_child(novo_cubo)
+	if cubo_pai == null:
+		return
 
+	# Instancia e marca no grupo IMEDIATAMENTE
+	var novo_cubo = cubo_scene.instantiate()
+	novo_cubo.add_to_group(\"clones\")
 
+	# Posiciona
+	novo_cubo.global_transform = cubo_pai.global_transform
 
+	# Copiar escala do mesh se existir
+	var mesh_name = \"MeshInstance3D\" # ajusta se tens outro nome
+	if cubo_pai.has_node(mesh_name) and novo_cubo.has_node(mesh_name):
+		novo_cubo.get_node(mesh_name).scale = cubo_pai.get_node(mesh_name).scale
+	else:
+		novo_cubo.scale = cubo_pai.scale
+
+	get_tree().current_scene.add_child(novo_cubo)
+
+	print(\"DEBUG: Clone criado. Agora:\", get_tree().get_nodes_in_group(\"clones\").size(), \"/\", max_clones)
 
 			
 func apagar_clones():
@@ -631,6 +633,7 @@ default_reticle = null
 cubo_scene = ExtResource("2_uath2")
 interacao_distancia = 10.0
 spawn_area = NodePath("../SpawnArea")
+max_clones = 5
 
 [node name="chao" type="CSGBox3D" parent="."]
 transform = Transform3D(19.712002, 0, 0, 0, 1, 0, 0, 0, 37.100002, 0, -0.7, 0)

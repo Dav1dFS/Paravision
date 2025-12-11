@@ -131,6 +131,7 @@ extends CharacterBody3D
 @export var spawn_area: Node3D             # Arraste o Node3D que define a área
 
 
+
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed : float = base_speed
 var current_speed : float = 0.0
@@ -596,8 +597,6 @@ func spawn_cubo_olhando():
 		
 		# Adiciona à cena
 		get_tree().current_scene.add_child(novo_cubo)
-
-
 
 
 			
