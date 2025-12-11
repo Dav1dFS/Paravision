@@ -72,10 +72,7 @@ func _physics_process(delta):
 	capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
 
 	if not is_on_floor():
-		if  north == false:
 			velocity.y -= gravity * delta
-		if north == true:
-			velocity.x -= gravity * delta
 
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		velocity.y = JUMP_VELOCITY
@@ -163,17 +160,26 @@ func _on_down_pressed() -> void:
 	inverted = false
 	north = false
 	
-	#ativar north
+	#IDEIA: Começar a partir daqui, receber aqui os sinais de qual âncora tá ativa
+	#e depois fazer a função das fisicas tipo a script da gravity anchor para se 
+	#adaptar com parametros á anchor escolhida atualmente, meter uma animation tree
+	#com animaçoes com o player rodado bem para  cada parede e ancora e transicionar automaticamente
+	#começar a partir daqui desta parte
 	
+	
+	#ativar TODOS
+	#Desativar down
 
 
 func _on_up_pressed() -> void:
 	inverted = true
 	
-	#desativar north
+	#desativar up
 
 
 func _on_north_pressed() -> void:
 	north = true
-	#desativar north, up button e deixar o down ativo
+	#desativar north
+	
+	
 	
