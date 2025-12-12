@@ -37,11 +37,40 @@ var current_interactable = null
 var inverted: bool
 var north: bool
 
+var gravity_toggle: bool
+
+var horizontal_anchor: bool
+
+var vertical_anchor: bool
+
 @export var UI_Parent_Node:Control
+
+@export var player_anim_player:AnimationPlayer  
+
+@export var up_btn:Button
+
+@export var down_btn:Button
+
+@export var e_btn:Button
+
+@export var w_btn:Button
+
+@export var s_btn:Button
+
+@export var n_btn:Button
 
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	gravity_toggle = false
+	
+	player_anim_player.play("idle")
+
+func _process(delta: float) -> void:
+	gravity_toggle_func()
+	
+	
+	
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
@@ -72,22 +101,38 @@ func _physics_process(delta):
 	capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
 
 	if not is_on_floor():
-			velocity.y -= gravity * delta
+		#turn this into a seperate funcion
+		
+		#velocity.y -= gravity * delta
+		if horizontal_anchor == false:
+			gravity_calc(delta, inverted, true, 0, 0, gravity)
+			gravity_calc(delta, inverted, false, 0, 0, gravity)
+		if horizontal_anchor == true:
+			print("do gravity pls")
 
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		velocity.y = JUMP_VELOCITY
+		#put function hee
 
 	var input_dir := Input.get_vector("left", "right", "forward", "back")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
 	if is_on_floor():
 		if direction:
-			if inverted == false:
-				velocity.x = direction.x * speed
-				velocity.z = direction.z * speed
-			elif inverted == true:
-				velocity.x = direction.x * speed
-				velocity.z = -direction.z * speed	
+			if horizontal_anchor == false:
+				vertical_grav_floor_movement(false, direction, 1)
+				vertical_grav_floor_movement(true, direction, -1)
+			elif horizontal_anchor == true:
+				print ("now do stuff")
+				
+			#"if inverted == false:
+				#velocity.x = direction.x * speed
+				#velocity.z = direction.z * speed
+			#elif inverted == true:
+				#velocity.x = direction.x * speed
+				#velocity.z = -direction.z * speed
+			#elif horizontal_anchor == true:"
+				
 		else:
 			velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
 			velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
@@ -157,29 +202,72 @@ func interact():
 
 
 func _on_down_pressed() -> void:
+	player_anim_player.play("idle")
 	inverted = false
-	north = false
-	
-	#IDEIA: Começar a partir daqui, receber aqui os sinais de qual âncora tá ativa
-	#e depois fazer a função das fisicas tipo a script da gravity anchor para se 
-	#adaptar com parametros á anchor escolhida atualmente, meter uma animation tree
-	#com animaçoes com o player rodado bem para  cada parede e ancora e transicionar automaticamente
-	#começar a partir daqui desta parte
-	
-	
-	#ativar TODOS
-	#Desativar down
-
+	gravity = 9.8
+	n_btn.disabled = true
+	up_btn.disabled = false
+	up_direction = Vector3.UP
+	JUMP_VELOCITY = 4.5
+	horizontal_anchor = false
 
 func _on_up_pressed() -> void:
+	player_anim_player.play("inverted")
 	inverted = true
-	
-	#desativar up
+	gravity = -9.8
+	up_btn.disabled = true
+	n_btn.disabled = false
+	up_direction = Vector3.DOWN
+	JUMP_VELOCITY = -4.5
+	horizontal_anchor = false
 
 
 func _on_north_pressed() -> void:
-	north = true
-	#desativar north
+	horizontal_anchor = true
+	player_anim_player.play("north")
+	inverted = false
+	gravity = 9.8
+	up_direction = Vector3.RIGHT
 	
+	#IDEA: INSTEAD of having bools for every diferent anchor, we have a bool for
+	#the east/west axis and the north/south axis, and we do the changes in gravity
+	#and other things like  we do in up and down, through a North/South Bool, that
+	#becomes true and false to signify if you're up, or down in that axis
 	
+	#also, make a function to account for the axis changes in the JUMP of the player
+
 	
+func gravity_toggle_func() -> void:
+	if Input.is_action_just_pressed("gravity_toggle"):
+		gravity_toggle = !gravity_toggle
+		print(gravity_toggle)
+		
+	if gravity_toggle == true:
+		UI_Parent_Node.visible = true	
+		Input.mouse_mode =Input.MOUSE_MODE_VISIBLE
+	elif gravity_toggle == false:
+		UI_Parent_Node.visible = false
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	
+func vertical_grav_floor_movement(inv_bool: bool, direction, z_float: float):
+	if inverted == inv_bool:
+			velocity.x = direction.x * speed
+			velocity.z = z_float * direction.z * speed
+			
+func hori_grav_floor_movement(axis_bool: bool, axis_bool_state: bool, direction, y_float):
+		if axis_bool == axis_bool_state:
+			velocity.x = direction.x * speed
+			velocity.y = y_float * direction.z * speed
+			
+func gravity_calc(delta, anchor_bool: bool, anchor_bool_state: bool, grav_float: float, grav_float_2: float, grav_float_3: float):
+	if anchor_bool == anchor_bool_state:
+		#horizontal axis
+		velocity.x -= grav_float * delta
+		velocity.z -= grav_float_2 * delta
+		
+		#vertical axis
+		velocity.y -= grav_float_3 * delta
+
+#func jump_calc():
+			
+		

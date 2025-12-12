@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://brvh8jhrd08h7" path="res://Scripts/interactable_objects.gd" id="1_itg1s"]
 [ext_resource type="Script" uid="uid://co5pdvvot5c46" path="res://Scripts/player.gd" id="2_itg1s"]
 [ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_pffcq"]
-[ext_resource type="Script" uid="uid://cfphimfb0uamd" path="res://Scripts/gravity_anchor/gravity_anchor.gd" id="3_8le3e"]
 [ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="4_12erh"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5cjrv"]
@@ -109,13 +108,29 @@ tracks/0/keys = {
 "values": [Vector3(0, 0, 0), Vector3(3.1415927, 0, 0)]
 }
 
+[sub_resource type="Animation" id="Animation_os2uo"]
+resource_name = "north"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, -1.5707964)]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_wxwlu"]
 _data = {
 &"RESET": SubResource("Animation_f5vm2"),
 &"back_to_idle": SubResource("Animation_8le3e"),
 &"idle": SubResource("Animation_d7n6j"),
 &"inverted": SubResource("Animation_xwkvs"),
-&"inverting": SubResource("Animation_pffcq")
+&"inverting": SubResource("Animation_pffcq"),
+&"north": SubResource("Animation_os2uo")
 }
 
 [node name="World" type="Node3D"]
@@ -204,19 +219,13 @@ environment = SubResource("Environment_t1w1c")
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Gravity_Anchor_UI_Parent" type="Control" parent="." node_paths=PackedStringArray("UI_Parent_Node", "Player", "up_button", "down_button", "player_anim_player")]
+[node name="Gravity_Anchor_UI_Parent" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("3_8le3e")
-UI_Parent_Node = NodePath(".")
-Player = NodePath("../Player")
-up_button = NodePath("UP")
-down_button = NodePath("DOWN")
-player_anim_player = NodePath("../Player/AnimationPlayer")
 
 [node name="Y AXIS Label" type="Label" parent="Gravity_Anchor_UI_Parent"]
 layout_mode = 1
@@ -348,11 +357,18 @@ text = "DOWN
 "
 icon_alignment = 1
 
-[node name="Player" parent="." node_paths=PackedStringArray("UI_Parent_Node") instance=ExtResource("1_gxvce")]
+[node name="Player" parent="." node_paths=PackedStringArray("UI_Parent_Node", "player_anim_player", "up_btn", "down_btn", "e_btn", "w_btn", "s_btn", "n_btn") instance=ExtResource("1_gxvce")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 script = ExtResource("2_itg1s")
 JUMP_VELOCITY = 4.5
 UI_Parent_Node = NodePath("../Gravity_Anchor_UI_Parent")
+player_anim_player = NodePath("AnimationPlayer")
+up_btn = NodePath("../Gravity_Anchor_UI_Parent/UP")
+down_btn = NodePath("../Gravity_Anchor_UI_Parent/DOWN")
+e_btn = NodePath("../Gravity_Anchor_UI_Parent/EAST")
+w_btn = NodePath("../Gravity_Anchor_UI_Parent/WEST")
+s_btn = NodePath("../Gravity_Anchor_UI_Parent/SOUTH")
+n_btn = NodePath("../Gravity_Anchor_UI_Parent/NORTH")
 
 [node name="Hand" type="Node3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.5, -0.40000007)
