@@ -41,7 +41,9 @@ var gravity_toggle: bool
 
 var horizontal_anchor: bool
 
-var vertical_anchor: bool
+var x_axis: bool
+
+var z_axis: bool
 
 @export var UI_Parent_Node:Control
 
@@ -62,6 +64,9 @@ var vertical_anchor: bool
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
+	down_btn.disabled = true
+	
 	gravity_toggle = false
 	
 	player_anim_player.play("idle")
@@ -104,15 +109,28 @@ func _physics_process(delta):
 		#turn this into a seperate funcion
 		
 		#velocity.y -= gravity * delta
-		if horizontal_anchor == false:
-			gravity_calc(delta, inverted, true, 0, 0, gravity)
-			gravity_calc(delta, inverted, false, 0, 0, gravity)
-		if horizontal_anchor == true:
-			print("do gravity pls")
+		match horizontal_anchor:
+			false:
+				gravity_calc(delta, inverted, true, 0, 0, gravity)
+				gravity_calc(delta, inverted, false, 0, 0, gravity)
+			true:
+				gravity_calc(delta, x_axis, false, gravity, 0, 0)
 
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
-		velocity.y = JUMP_VELOCITY
-		#put function hee
+		match horizontal_anchor:
+			false:
+				jump_calc (inverted, true, JUMP_VELOCITY, 0, 0)
+				jump_calc (inverted, false, JUMP_VELOCITY, 0, 0)
+			true:
+				jump_calc (x_axis, true, 0, JUMP_VELOCITY, 0)
+				jump_calc (x_axis, false, 0, JUMP_VELOCITY, 0)
+				jump_calc (z_axis, true, 0, 0, JUMP_VELOCITY)
+				jump_calc (z_axis, false, 0, 0, JUMP_VELOCITY)
+			
+		
+		
+		#velocity.y = JUMP_VELOCITY
+		#put function here
 
 	var input_dir := Input.get_vector("left", "right", "forward", "back")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -123,6 +141,12 @@ func _physics_process(delta):
 				vertical_grav_floor_movement(false, direction, 1)
 				vertical_grav_floor_movement(true, direction, -1)
 			elif horizontal_anchor == true:
+				hori_grav_floor_movement(x_axis, false, 0, direction.x, -1, direction.x, 1, direction.z)
+				#hori_grav_floor_movement(x_axis, true, direction, -1)
+				#hori_grav_floor_movement(z_axis, false, direction, 1)
+				#hori_grav_floor_movement(z_axis, true, direction, -1)
+				
+				
 				print ("now do stuff")
 				
 			#"if inverted == false:
@@ -205,7 +229,8 @@ func _on_down_pressed() -> void:
 	player_anim_player.play("idle")
 	inverted = false
 	gravity = 9.8
-	n_btn.disabled = true
+	n_btn.disabled = false
+	down_btn.disabled = false
 	up_btn.disabled = false
 	up_direction = Vector3.UP
 	JUMP_VELOCITY = 4.5
@@ -216,6 +241,7 @@ func _on_up_pressed() -> void:
 	inverted = true
 	gravity = -9.8
 	up_btn.disabled = true
+	down_btn.disabled = false
 	n_btn.disabled = false
 	up_direction = Vector3.DOWN
 	JUMP_VELOCITY = -4.5
@@ -227,14 +253,13 @@ func _on_north_pressed() -> void:
 	player_anim_player.play("north")
 	inverted = false
 	gravity = 9.8
+	JUMP_VELOCITY = 4.5
 	up_direction = Vector3.RIGHT
-	
-	#IDEA: INSTEAD of having bools for every diferent anchor, we have a bool for
-	#the east/west axis and the north/south axis, and we do the changes in gravity
-	#and other things like  we do in up and down, through a North/South Bool, that
-	#becomes true and false to signify if you're up, or down in that axis
-	
-	#also, make a function to account for the axis changes in the JUMP of the player
+	x_axis = false
+	n_btn.disabled = true
+	up_btn.disabled = false
+	down_btn.disabled = false
+
 
 	
 func gravity_toggle_func() -> void:
@@ -254,10 +279,11 @@ func vertical_grav_floor_movement(inv_bool: bool, direction, z_float: float):
 			velocity.x = direction.x * speed
 			velocity.z = z_float * direction.z * speed
 			
-func hori_grav_floor_movement(axis_bool: bool, axis_bool_state: bool, direction, y_float):
+func hori_grav_floor_movement(axis_bool: bool, axis_bool_state: bool, x_float: float, direction_1, y_float:float ,  direction_2, z_float:float ,  direction_3):
 		if axis_bool == axis_bool_state:
-			velocity.x = direction.x * speed
-			velocity.y = y_float * direction.z * speed
+			velocity.x = x_float * direction_1 * speed
+			velocity.y = y_float * direction_2 * speed
+			velocity.z = z_float * direction_3 * speed
 			
 func gravity_calc(delta, anchor_bool: bool, anchor_bool_state: bool, grav_float: float, grav_float_2: float, grav_float_3: float):
 	if anchor_bool == anchor_bool_state:
@@ -267,7 +293,23 @@ func gravity_calc(delta, anchor_bool: bool, anchor_bool_state: bool, grav_float:
 		
 		#vertical axis
 		velocity.y -= grav_float_3 * delta
+		
+		#maybe the -= is what's causing the issue by not reseting to velocity after changing, 
+		#maybe i need a function that resets velocity before
+		#applying a new gravity, this way old gravity does not affect new one.
+		
+			
+		#IDEA 2: Instead of a bool signifying axis, you use a string with the names "X_axis" and "Z_axis" etc,
+		#e assim não precisas de usar demasiados ifs
 
-#func jump_calc():
+func jump_calc(anchor_bool: bool, anchor_bool_state: bool, value_1: float, value_2: float, value_3: float):
+	if anchor_bool == anchor_bool_state:
+		#vertical axis
+		velocity.y = value_1
+	
+		#horizontal axis
+		velocity.x = value_2
+		velocity.z = value_3
+	
 			
 		
