@@ -119,55 +119,39 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		match horizontal_anchor:
 			false:
-				jump_calc (inverted, true, JUMP_VELOCITY, 0, 0)
-				jump_calc (inverted, false, JUMP_VELOCITY, 0, 0)
+				jump_calc (inverted, JUMP_VELOCITY, 0, 0)
 			true:
-				jump_calc (x_axis, true, 0, JUMP_VELOCITY, 0)
-				jump_calc (x_axis, false, 0, JUMP_VELOCITY, 0)
-				jump_calc (z_axis, true, 0, 0, JUMP_VELOCITY)
-				jump_calc (z_axis, false, 0, 0, JUMP_VELOCITY)
-			
-		
-		
+				jump_calc (x_axis, 0, JUMP_VELOCITY, 0)
+				jump_calc (z_axis, 0, 0, JUMP_VELOCITY)
+	
 		#velocity.y = JUMP_VELOCITY
-		#put function here
 
 	var input_dir := Input.get_vector("left", "right", "forward", "back")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
 	if is_on_floor():
 		if direction:
-			if horizontal_anchor == false:
-				vertical_grav_floor_movement(false, direction, 1)
-				vertical_grav_floor_movement(true, direction, -1)
-			elif horizontal_anchor == true:
-				hori_grav_floor_movement(x_axis, false, 0, direction.x, -1, direction.x, 1, direction.z)
-				#hori_grav_floor_movement(x_axis, true, direction, -1)
-				#hori_grav_floor_movement(z_axis, false, direction, 1)
-				#hori_grav_floor_movement(z_axis, true, direction, -1)
-				
-			#"if inverted == false:
-				#velocity.x = direction.x * speed
-				#velocity.z = direction.z * speed
-			#elif inverted == true:
-				#velocity.x = direction.x * speed
-				#velocity.z = -direction.z * speed
-			#elif horizontal_anchor == true:"
+			match horizontal_anchor:
+				false:
+					vertical_grav_floor_movement(false, direction, 1)
+					vertical_grav_floor_movement(true, direction, -1)
+				true:
+					hori_grav_floor_movement(x_axis, false, 0, direction.x, -1, direction.x, 1, direction.z)
 				
 		else:
 			if horizontal_anchor == false:
-				lerp_after_mov(direction, delta, inverted, 1, 1, 0 , 7.0)
+				velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
+				velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
 				
 			elif horizontal_anchor == true:
-				lerp_after_mov(direction, delta, x_axis, 0, 1, 1 , 7.0)
+				lerp_after_mov_X(direction, delta, x_axis, 7.0)
 			#velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
 			#velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
 	else:
-		#if horizontal_anchor == false:
-			#lerp_after_mov(direction, delta, inverted, 1, 1, 0 , 3.0)
-				
-		#elif horizontal_anchor == true:
-			#lerp_after_mov(direction, delta, x_axis, 0, 1, 1 , 3.0)
+		
+		#note: if the player starts floating endlessly in one axis mid air
+		#then check these two lines below, it might be cause they aint doin
+		#their thing on the right axis, if nothing breaks, then nice ig haahahah
 		
 		velocity.x = lerp(velocity.x, direction.x * speed, delta * 3.0)
 		velocity.z = lerp(velocity.z, direction.z * speed, delta * 3.0)
@@ -234,7 +218,7 @@ func interact():
 
 
 func _on_down_pressed() -> void:
-	velocity = Vector3.ZERO
+	#velocity = Vector3.ZERO
 	player_anim_player.play("idle")
 	inverted = false
 	gravity = 9.8
@@ -246,7 +230,7 @@ func _on_down_pressed() -> void:
 	horizontal_anchor = false
 
 func _on_up_pressed() -> void:
-	velocity = Vector3.ZERO
+	#velocity = Vector3.ZERO
 	player_anim_player.play("inverted")
 	inverted = true
 	gravity = -9.8
@@ -259,7 +243,7 @@ func _on_up_pressed() -> void:
 
 
 func _on_north_pressed() -> void:
-	velocity = Vector3.ZERO
+	#velocity.y = 0
 	horizontal_anchor = true
 	player_anim_player.play("north")
 	inverted = false
@@ -308,35 +292,18 @@ func gravity_calc(delta, anchor_bool: bool, anchor_bool_state: bool, grav_float:
 		#vertical axis
 		velocity.y -= grav_float_3 * delta
 		
-		#maybe the -= is what's causing the issue by not reseting to velocity after changing, 
-		#maybe i need a function that resets velocity before
-		#applying a new gravity, this way old gravity does not affect new one.
-		
-			
-		#IDEA 2: Instead of a bool signifying axis, you use a string with the names "X_axis" and "Z_axis" etc,
-		#e assim não precisas de usar demasiados ifs
 
-func jump_calc(anchor_bool: bool, anchor_bool_state: bool, value_1: float, value_2: float, value_3: float):
-	if anchor_bool == anchor_bool_state:
+func jump_calc(anchor_bool: bool, value_1: float, value_2: float, value_3: float):
+	if anchor_bool == true || anchor_bool == false:
 		#vertical axis
 		velocity.y = value_1
 	
 		#horizontal axis
 		velocity.x = value_2
 		velocity.z = value_3
-		
-		
-func lerp_after_mov (direction, delta, anchor_bool :bool, 
-value_1: float, value_2: float, value_3: float, final_value: float):
-	if anchor_bool == true || anchor_bool == false:
-		#horizontal
-		velocity.x = value_1 * lerp(velocity.x, direction.x * speed, delta * final_value)
-		velocity.z = value_2 * lerp(velocity.z, direction.z * speed, delta * final_value)
-		
-		#vertical
-		velocity.y = value_3 * lerp(velocity.y, direction.y * speed, delta * final_value)
+
+func lerp_after_mov_X (direction, delta, anchor_bool :bool, final_value: float):
 	
-#I NEED to find a way to reset the unnused asset only once, in an instant, so its
-# not affected by the previous state it was in but it continues to funcion as normal
-#cause right now, what im doing is destroying the jump, despite helping with lerping
-		
+	if anchor_bool == true || anchor_bool == false:	
+		velocity.y = lerp(velocity.y, direction.y * speed, delta * final_value)
+		velocity.z = lerp(velocity.z, direction.z * speed, delta * final_value)
