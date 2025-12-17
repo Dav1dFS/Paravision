@@ -1,5 +1,4 @@
-extends Node3D
-
+extends RigidBody3D
 @export var is_clone: bool = false
 
 func _ready():
