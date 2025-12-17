@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 var speed 	
-const JUMP_VELOCITY: float = 4.5
+@export var JUMP_VELOCITY: float = 4.5
 const WALK_SPEED: float = 4.5
 const SPRINT_SPEED: float = 8.0
 const CROUCH_SPEED: float = 2.0
@@ -46,6 +46,38 @@ var initial_fov: float
 var zoomed_fov: float = 60.0
 var night_vision_was_on: bool = false
 
+
+#gravity anchor stuff
+var inverted: bool
+var north: bool
+
+var gravity_toggle: bool
+
+var horizontal_anchor: bool
+
+var x_axis: bool
+
+var z_axis: bool
+
+@export var UI_Parent_Node:Control
+
+@export var player_anim_player:AnimationPlayer  
+
+@export var up_btn:Button
+
+@export var down_btn:Button
+
+@export var e_btn:Button
+
+@export var w_btn:Button
+
+@export var s_btn:Button
+
+@export var n_btn:Button
+
+var current_anchor: String
+
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	initial_fov = camera.fov
@@ -53,6 +85,18 @@ func _ready():
 	player_view_night_vision_shader.visible = false
 	camcorder_canvas_layer.visible = false
 	camcorder_night_vision_shader.visible = false
+	
+	down_btn.disabled = true
+	
+	gravity_toggle = false
+	
+	player_anim_player.play("idle")
+
+func _process(delta: float) -> void:
+	gravity_toggle_func()
+	
+	
+	
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
@@ -97,24 +141,70 @@ func _physics_process(delta):
 	capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
 
 	if not is_on_floor():
-		velocity.y -= gravity * delta
-
+		
+		#does gravity acording to selected anchor
+		match horizontal_anchor:
+			false:
+				gravity_calc(delta, inverted, 0, 0, gravity)
+			true:
+				gravity_calc(delta, x_axis,gravity, 0, 0)
+				gravity_calc(delta, z_axis, 0, gravity, 0)
+	
+	#does jumping acording to selected anchor
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
-		velocity.y = JUMP_VELOCITY
+		match horizontal_anchor:
+			false:
+				jump_calc (inverted, JUMP_VELOCITY, velocity.x, velocity.z)
+			true:
+				jump_calc (x_axis, velocity.y, JUMP_VELOCITY, velocity.z)
+				jump_calc (z_axis, velocity.y, velocity.x, JUMP_VELOCITY)
 
+	#input
 	var input_dir := Input.get_vector("left", "right", "forward", "back")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
+
+	#does horizontal movement acording to selected anchor
 	if is_on_floor():
 		if direction:
-			velocity.x = direction.x * speed
-			velocity.z = direction.z * speed
+			match horizontal_anchor:
+				false:
+					vertical_grav_floor_movement(false, direction, 1)
+					vertical_grav_floor_movement(true, direction, -1)
+				true:
+					hori_grav_floor_movement_X(x_axis, false, -1, direction.x, 1, direction.z, "north")
+					hori_grav_floor_movement_X(x_axis, true, 1, direction.x, 1, direction.z, "south")
+					
+					
+					hori_grav_floor_movement_Z(z_axis, false, 1, direction.x, -1, direction.z, "east")
+					hori_grav_floor_movement_Z(z_axis, true, 1, direction.x, 1, direction.z, "west")
+
+				
 		else:
-			velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
-			velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
+			if horizontal_anchor == false:
+				velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
+				velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
+				
+			elif horizontal_anchor == true:
+				lerp_after_mov_X(direction, delta, x_axis, 7.0, "north")
+				lerp_after_mov_X(direction, delta, x_axis, 7.0, "south")
+			
+				lerp_after_mov_Z(direction, delta, z_axis, 7.0, "east")
+				lerp_after_mov_Z(direction, delta, z_axis, 7.0, "west")
+
 	else:
-		velocity.x = lerp(velocity.x, direction.x * speed, delta * 3.0)
-		velocity.z = lerp(velocity.z, direction.z * speed, delta * 3.0)
+		
+		if horizontal_anchor == false:
+			velocity.x = lerp(velocity.x, direction.x * speed, delta * 3.0)
+			velocity.z = lerp(velocity.z, direction.z * speed, delta * 3.0)
+				
+		elif horizontal_anchor == true:
+			lerp_after_mov_X(direction, delta, x_axis, 3.0, "north") 
+			lerp_after_mov_X(direction, delta, x_axis, 3.0, "south")
+			
+			lerp_after_mov_Z(direction, delta, z_axis, 3.0, "east")
+			lerp_after_mov_Z(direction, delta, z_axis, 3.0, "west")
+
 
 	T_BOB += delta * velocity.length() * float(is_on_floor())
 	camera.transform.origin = _headbob(T_BOB)
@@ -261,3 +351,180 @@ func apagar_clones():
 		if is_instance_valid(c):
 			c.queue_free()
 	print("Clones apagados. Agora:", get_tree().get_nodes_in_group("clones").size())
+
+func _on_down_pressed() -> void:
+	
+	current_anchor = "down"
+	
+	#velocity = Vector3.ZERO
+	player_anim_player.play("idle")
+	inverted = false
+	gravity = 9.8
+	n_btn.disabled = false
+	down_btn.disabled = false
+	up_btn.disabled = false
+	up_direction = Vector3.UP
+	JUMP_VELOCITY = 4.5
+	horizontal_anchor = false
+	s_btn.disabled = false
+	w_btn.disabled = false
+	e_btn.disabled = false
+	
+	UI_Parent_Node.visible = false
+
+func _on_up_pressed() -> void:
+	
+	current_anchor = "up"
+	
+	#velocity = Vector3.ZERO
+	player_anim_player.play("inverted")
+	inverted = true
+	gravity = -9.8
+	up_btn.disabled = true
+	down_btn.disabled = false
+	n_btn.disabled = false
+	up_direction = Vector3.DOWN
+	JUMP_VELOCITY = -4.5
+	horizontal_anchor = false
+	s_btn.disabled = false
+	w_btn.disabled = false
+	e_btn.disabled = false
+	
+	UI_Parent_Node.visible = false
+
+
+func _on_north_pressed() -> void:
+	
+	current_anchor = "north"
+	
+	#velocity.y = 0
+	horizontal_anchor = true
+	player_anim_player.play("north")
+	inverted = true
+	gravity = 9.8
+	JUMP_VELOCITY = 4.5
+	up_direction = Vector3.RIGHT
+	x_axis = false
+	n_btn.disabled = true
+	up_btn.disabled = false
+	down_btn.disabled = false
+	s_btn.disabled = false
+	e_btn.disabled = false
+	
+	UI_Parent_Node.visible = false
+
+func _on_south_pressed() -> void:
+	
+	current_anchor = "south"
+	
+	horizontal_anchor = true
+	player_anim_player.play("south")
+	gravity = -9.8
+	JUMP_VELOCITY = -4.5
+	up_direction = Vector3.LEFT
+	x_axis = true
+	n_btn.disabled = false
+	s_btn.disabled = true
+	up_btn.disabled = false
+	down_btn.disabled = false
+	w_btn.disabled = false
+	e_btn.disabled = false
+	
+	UI_Parent_Node.visible = false
+	
+	
+func _on_east_pressed() -> void:
+	
+	current_anchor = "east"
+	
+	horizontal_anchor = true
+	player_anim_player.play("east")
+	gravity = 9.8
+	JUMP_VELOCITY = 4.5
+	up_direction = Vector3.BACK
+	z_axis = false
+	n_btn.disabled = false
+	s_btn.disabled = false
+	up_btn.disabled = false
+	down_btn.disabled = false
+	e_btn.disabled = true
+	w_btn.disabled = false
+	
+	UI_Parent_Node.visible = false
+	
+
+func _on_west_pressed() -> void:
+	current_anchor = "west"
+	horizontal_anchor = true
+	player_anim_player.play("west")
+	gravity = -9.8
+	JUMP_VELOCITY = -4.5
+	up_direction = Vector3.FORWARD
+	z_axis = true
+	n_btn.disabled = false
+	s_btn.disabled = false
+	up_btn.disabled = false
+	down_btn.disabled = false
+	e_btn.disabled = false
+	w_btn.disabled = true
+	
+	
+func gravity_toggle_func() -> void:
+	if Input.is_action_just_pressed("gravity_toggle"):
+		gravity_toggle = !gravity_toggle
+		print(gravity_toggle)
+		
+	if gravity_toggle == true:
+		UI_Parent_Node.visible = true	
+		Input.mouse_mode =Input.MOUSE_MODE_VISIBLE
+	elif gravity_toggle == false:
+		UI_Parent_Node.visible = false
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	
+func vertical_grav_floor_movement(inv_bool: bool, direction, z_float: float):
+	if inverted == inv_bool:
+			velocity.x = direction.x * speed
+			velocity.z = z_float * direction.z * speed
+			
+func hori_grav_floor_movement_X(axis_bool: bool, axis_bool_state: bool, y_float:float ,  direction_2, z_float:float ,  direction_3, current_anchor_value: String):
+		if axis_bool == axis_bool_state && current_anchor == current_anchor_value:
+			velocity.y = y_float * direction_2 * speed
+			velocity.z = z_float * direction_3 * speed
+			
+func hori_grav_floor_movement_Z(axis_bool: bool, axis_bool_state: bool, x_float: float, direction_1, y_float:float ,  direction_2, current_anchor_value: String):
+		if axis_bool == axis_bool_state && current_anchor == current_anchor_value:
+			velocity.x = x_float * direction_1 * speed
+			velocity.y = y_float * direction_2 * speed
+			
+func gravity_calc(delta, anchor_bool: bool, grav_float: float, grav_float_2: float, grav_float_3: float):
+
+	if anchor_bool == true || anchor_bool == false:
+		#horizontal axis
+		velocity.x -= grav_float * delta
+		velocity.z -= grav_float_2 * delta
+		
+		#vertical axis
+		velocity.y -= grav_float_3 * delta
+		
+
+func jump_calc(anchor_bool: bool, value_1: float, value_2: float, value_3: float):
+	if anchor_bool == true || anchor_bool == false:
+		#vertical axis
+		velocity.y = value_1
+	
+		#horizontal axis
+		velocity.x = value_2
+		velocity.z = value_3
+
+func lerp_after_mov_X (direction, delta, anchor_bool :bool, final_value: float, current_anchor_value: String):
+	
+	if anchor_bool == true || anchor_bool == false && current_anchor == current_anchor_value:
+		velocity.y = lerp(velocity.y, direction.y * speed, delta * final_value)
+		velocity.z = lerp(velocity.z, direction.z * speed, delta * final_value)
+		
+
+func lerp_after_mov_Z (direction, delta, anchor_bool :bool, final_value: float, current_anchor_value: String):
+	
+	if anchor_bool == true || anchor_bool == false && current_anchor == current_anchor_value:
+		velocity.x = lerp(velocity.x, direction.x * speed, delta * final_value)
+		velocity.y = lerp(velocity.y, direction.y * speed, delta * final_value)
