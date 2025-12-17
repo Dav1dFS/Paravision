@@ -1,9 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://dbc6odv0qj6g4"]
+[gd_scene load_steps=16 format=3 uid="uid://bunrrwyv2ta0y"]
 
-[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_dhrl6"]
-[ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_uath2"]
-[ext_resource type="Script" uid="uid://cfphimfb0uamd" path="res://Scripts/gravity_anchor/gravity_anchor.gd" id="2_xq1w2"]
-[ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="4_51vxp"]
+[ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://addons/fpc/character.tscn" id="1_3h3rl"]
+[ext_resource type="Sky" uid="uid://b4mmcv3j14t5p" path="res://materials/sky_test.tres" id="2_nmyp1"]
+[ext_resource type="Script" uid="uid://cfphimfb0uamd" path="res://Scripts/gravity_anchor/gravity_anchor.gd" id="3_cmett"]
+[ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="4_5uumk"]
 
 [sub_resource type="Animation" id="Animation_bus37"]
 length = 0.001
@@ -60,7 +60,7 @@ _data = {
 [sub_resource type="Environment" id="Environment_dhrl6"]
 background_mode = 2
 background_color = Color(0.5973062, 0.87649775, 0.99999994, 1)
-sky = ExtResource("2_uath2")
+sky = ExtResource("2_nmyp1")
 ambient_light_source = 3
 reflected_light_source = 2
 ssao_enabled = true
@@ -89,7 +89,7 @@ transform = Transform3D(1, 0, 0, 0, 0.96986353, 0.24364886, 0, -0.24364886, 0.96
 light_energy = 3.244
 shadow_enabled = true
 
-[node name="Character" parent="." instance=ExtResource("1_dhrl6")]
+[node name="Character" parent="." instance=ExtResource("1_3h3rl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4074702, 0)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Character"]
@@ -153,7 +153,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("2_xq1w2")
+script = ExtResource("3_cmett")
 UI_Parent_Node = NodePath(".")
 Player = NodePath("../Character")
 up_button = NodePath("UP")
@@ -204,7 +204,7 @@ offset_top = 19.135994
 offset_right = 112.431946
 offset_bottom = 61.135994
 text = "PLACE ANCHOR"
-label_settings = ExtResource("4_51vxp")
+label_settings = ExtResource("4_5uumk")
 horizontal_alignment = 1
 vertical_alignment = 1
 
