@@ -26,18 +26,33 @@ var fov_bonuses: float = 0.0
 @onready var capsule_shape = $CollisionShape3D.shape
 @onready var head = $Head
 @onready var camera = $Head/Camera3D
+@onready var camcorder_scene = $Head/Camera3D/Camarascene
 @onready var raycast = $Head/Camera3D/ObjectDetector
-
+@onready var player_canvas_layer: CanvasLayer = $CanvasLayer
+@onready var player_view_night_vision_shader: ColorRect = $CanvasLayer/NightVisionShader
+@onready var camcorder_canvas_layer: CanvasLayer = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer
+@onready var camcorder_night_vision_shader: ColorRect = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer/NightVisionShader
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
 @export var cubo_scene: PackedScene  
-@export var spawn_area: Node3D    
-
+@export var spawn_area: Node3D  
 
 var gravity: float = 9.8
 var crouched: bool = false
 var current_interactable = null
+var is_using_camera: bool = false
+var night_vision_on: bool = false
+var is_swapping_modes: bool = false
+var initial_fov: float
+var zoomed_fov: float = 60.0
+var night_vision_was_on: bool = false
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	initial_fov = camera.fov
+	player_canvas_layer.visible = false
+	player_view_night_vision_shader.visible = false
+	camcorder_canvas_layer.visible = false
+	camcorder_night_vision_shader.visible = false
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
@@ -46,6 +61,17 @@ func _unhandled_input(event):
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-40), deg_to_rad(60))
 
 func _physics_process(delta):
+	if Input.is_action_just_pressed("use_camera"):
+		if animation_player.is_playing():
+			return
+		is_using_camera = !is_using_camera
+		update_camera_view()
+	
+	if is_using_camera:
+		if Input.is_action_just_pressed("night_vision"):
+			night_vision_on = !night_vision_on
+			update_night_vision()
+		
 	if Input.is_action_just_pressed("interact"):
 		interact()
 	
@@ -102,7 +128,9 @@ func _physics_process(delta):
 	else:
 		fov_bonuses = 0.0
 
-	camera.fov = lerp(camera.fov, BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses, delta * 8.0)
+	if !is_using_camera and !is_swapping_modes:
+		var normal_target = BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses
+		camera.fov = lerp(camera.fov, normal_target, delta * 8.0)
 
 	move_and_slide()
 	check_hover_collision()
@@ -159,6 +187,47 @@ func interact():
 		elif hit.has_method("interact"):
 			hit.interact()
 
+func update_camera_view():
+	is_swapping_modes = true
+	if is_using_camera:
+		animation_player.play("Raise_Camera")
+		camcorder_scene.visible = true
+	else:
+		animation_player.play_backwards("Raise_Camera")
+		camera.fov = initial_fov
+		camcorder_scene.visible = true
+		if player_view_night_vision_shader.visible == true:
+			player_view_night_vision_shader.visible = false
+			night_vision_was_on = true
+		else:
+			player_view_night_vision_shader.visible = false
+			night_vision_was_on = false
+	
+func update_night_vision():
+	if night_vision_on:
+		player_canvas_layer.visible = true
+		player_view_night_vision_shader.visible = true
+		camcorder_canvas_layer.visible = true
+		camcorder_night_vision_shader.visible = true
+	else:
+		player_canvas_layer.visible = false
+		player_view_night_vision_shader.visible = false
+		camcorder_canvas_layer.visible = false
+		camcorder_night_vision_shader.visible = false
+	
+func _on_animation_player_animation_finished(anim_name: StringName) -> void:
+	if !is_swapping_modes:
+		return
+		
+	camcorder_scene.visible = false
+	if is_using_camera:
+		camera.fov = zoomed_fov
+		if night_vision_was_on == true:
+			player_view_night_vision_shader.visible = true
+	else:
+		camera.fov = initial_fov
+	is_swapping_modes = false
+	
 func random_position_in_area() -> Vector3:
 	if spawn_area == null:
 		print("ERRO: spawn_area não definido!")
