@@ -119,10 +119,10 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		match horizontal_anchor:
 			false:
-				jump_calc (inverted, JUMP_VELOCITY, 0, 0)
+				jump_calc (inverted, JUMP_VELOCITY, velocity.x, velocity.z)
 			true:
-				jump_calc (x_axis, 0, JUMP_VELOCITY, 0)
-				jump_calc (z_axis, 0, 0, JUMP_VELOCITY)
+				jump_calc (x_axis, velocity.y, JUMP_VELOCITY, velocity.z)
+				jump_calc (z_axis, velocity.y, velocity.x, JUMP_VELOCITY)
 	
 		#velocity.y = JUMP_VELOCITY
 
