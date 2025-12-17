@@ -28,13 +28,16 @@ var fov_bonuses: float = 0.0
 @onready var camera = $Head/Camera3D
 @onready var raycast = $Head/Camera3D/ObjectDetector
 
-@export var cubo_scene: PackedScene  
+@export var cubo_scene: RigidBody3D
 @export var spawn_area: Node3D    
-
+@export var cubo_original: Node3D
 
 var gravity: float = 9.8
 var crouched: bool = false
 var current_interactable = null
+
+# Número máximo de clones permitidos
+var max_clones: int = 5
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -123,17 +126,28 @@ func can_stand() -> bool:
 	ray_params.exclude = [self]
 
 	var collision = get_world_3d().direct_space_state.intersect_ray(ray_params)
-	return collision == {}  # True se não houver colisão acima
+	return collision == {}
 
 func check_hover_collision():
 	if raycast.is_colliding():
 		var hover_collider = raycast.get_collider()
-		if hover_collider and is_instance_valid(hover_collider) and hover_collider.has_method("interact") and hover_collider.has_method("show_label"):
-			if current_interactable != hover_collider:
-				if current_interactable:
-					current_interactable.hide_label()
-				current_interactable = hover_collider
-				current_interactable.show_label()
+		if hover_collider and is_instance_valid(hover_collider):
+			var cubo_node = find_cubo_parent(hover_collider)
+			
+			if cubo_node and cubo_node.has_method("show_label"):
+				if current_interactable != cubo_node:
+					if current_interactable:
+						current_interactable.hide_label()
+					current_interactable = cubo_node
+					current_interactable.show_label()
+			elif hover_collider.has_method("show_label"):
+				if current_interactable != hover_collider:
+					if current_interactable:
+						current_interactable.hide_label()
+					current_interactable = hover_collider
+					current_interactable.show_label()
+			else:
+				hide_current_label()
 		else:
 			hide_current_label()
 	else:
@@ -144,51 +158,98 @@ func hide_current_label():
 		current_interactable.hide_label()
 		current_interactable = null
 
+func find_cubo_parent(node: Node) -> Node:
+	var current = node
+	var depth = 0
+	while current != null and depth < 10:
+		# PRIMEIRO verifica se tem a variável is_clone (é o Node3D do cubo)
+		if "is_clone" in current:
+			return current
+		
+		current = current.get_parent()
+		depth += 1
+	
+	return null
+
 func interact():
-	if raycast.is_colliding():
-		var hit = raycast.get_collider()
-		if hit == null:
-			return
-		
-		var root_node = hit
-		while root_node.get_parent() != null and not root_node.is_in_group("cubo_original"):
-			root_node = root_node.get_parent()
-		
-		if root_node.is_in_group("cubo_original"):
-			spawn_cubo_na_area()
-		elif hit.has_method("interact"):
+	if not raycast.is_colliding():
+		return
+	
+	var hit = raycast.get_collider()
+	if hit == null:
+		return
+	
+	# Procura o nó raiz do cubo (Node3D com is_clone)
+	var cubo_node = find_cubo_parent(hit)
+	
+	if cubo_node:
+		# Verifica se tem a variável is_clone
+		if "is_clone" in cubo_node:
+			if not cubo_node.is_clone:
+				# É o cubo ORIGINAL - pode clonar
+				spawn_cubo_na_area()
+			else:
+				# É um CLONE - não pode clonar
+				print("Este é um CLONE! Apenas o cubo original pode gerar novos cubos.")
+	else:
+		# Não é um cubo, tenta interagir normalmente
+		if hit.has_method("interact"):
 			hit.interact()
 
 func random_position_in_area() -> Vector3:
 	if spawn_area == null:
-		print("ERRO: spawn_area não definido!")
-		return global_transform.origin
+		return global_position
 	
 	var shape = spawn_area.get_node("CollisionShape3D").shape
-	if shape == null:
-		return spawn_area.global_transform.origin
-	
 	var extents = shape.extents
-	var random_offset = Vector3(
-		randf_range(-extents.x, extents.x),
-		randf_range(-extents.y, extents.y),
-		randf_range(-extents.z, extents.z)
-	)
-	return spawn_area.global_transform.origin + random_offset
+	
+	var x = randf_range(-extents.x, extents.x)
+	var z = randf_range(-extents.z, extents.z)
+	
+	var pos = spawn_area.global_position + Vector3(x, 0, z)
+	
+	# 🔒 FORÇAR ALTURA DO CUBO ORIGINAL
+	if cubo_original:
+		pos.y = cubo_original.global_position.y
+	
+	return pos
+
 
 func spawn_cubo_na_area():
 	if cubo_scene == null or spawn_area == null:
 		print("ERRO: cubo_scene ou spawn_area não definidos!")
 		return
-	
+
+	# Contar clones existentes
+	var num_clones = get_tree().get_nodes_in_group("clones").size()
+
+	if num_clones >= max_clones:
+		print("Limite de clones atingido! Máximo: " + str(max_clones))
+		return
+
+	# Instanciar o cubo clone
 	var novo_cubo = cubo_scene.instantiate()
-	novo_cubo.global_transform.origin = random_position_in_area()
-	novo_cubo.add_to_group("clones")
+	novo_cubo.global_position = random_position_in_area()
+	
+
+# GARANTIR escala limpa
+	novo_cubo.scale = Vector3.ONE
+
+	
+	# IMPORTANTE: Marcar como clone ANTES de adicionar à cena
+	if "is_clone" in novo_cubo:
+		novo_cubo.is_clone = true
+	
+	# Adicionar à cena
 	get_tree().current_scene.add_child(novo_cubo)
+	
+	
+	print("Clone criado! Total de clones: " + str(num_clones + 1))
 
 func apagar_clones():
 	var clones = get_tree().get_nodes_in_group("clones")
+	var count = clones.size()
 	for c in clones:
 		if is_instance_valid(c):
 			c.queue_free()
-	print("Clones apagados. Agora:", get_tree().get_nodes_in_group("clones").size())
+	print("Clones apagados! Total removido: " + str(count))

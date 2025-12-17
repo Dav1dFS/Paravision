@@ -1,12 +1,19 @@
-extends Node3D
+extends RigidBody3D
 
 @export var is_clone: bool = false
 
 func _ready():
-	if not is_clone:
-		add_to_group("cubo_original")
-	else:
+	if is_clone:
+		# Clones têm física normal
+		freeze = false
+		gravity_scale = 1.0
 		add_to_group("clones")
+	else:
+		# Original fica parado no ar
+		freeze = true
+		gravity_scale = 0.0
+		add_to_group("cubo_original")
+
 
 # Função para verificar se pode ser clonado
 func can_be_cloned() -> bool:

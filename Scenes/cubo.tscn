@@ -2,19 +2,21 @@
 
 [ext_resource type="Script" uid="uid://i1hhb7e0ala2" path="res://Scripts/cubo.gd" id="1_bdkfm"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_xq1w2"]
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_uath2"]
 
-[node name="Node3D" type="Node3D" groups=["cubo_original"]]
-transform = Transform3D(0.305, 0, 0, 0, 0.305, 0, 0, 0, 0.305, 0, 0, 0)
+[sub_resource type="BoxMesh" id="BoxMesh_xq1w2"]
+
+[node name="Node3D" type="Node3D"]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
 script = ExtResource("1_bdkfm")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0)
-mesh = SubResource("BoxMesh_xq1w2")
-
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
+transform = Transform3D(0.305, 0, 0, 0, 0.305, 0, 0, 0, 0.305, 0, 0, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" groups=["cubo_original"]]
 shape = SubResource("BoxShape3D_uath2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" groups=["cubo_original"]]
+transform = Transform3D(0.9999998, 0, 0, 0, 0.9999998, 0, 0, 0, 0.9999998, 0, 0, 0)
+mesh = SubResource("BoxMesh_xq1w2")
+skeleton = NodePath("../..")
