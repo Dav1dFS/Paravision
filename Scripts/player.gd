@@ -25,19 +25,15 @@ var fov_bonuses: float = 0.0
 @onready var player_collider = $CollisionShape3D
 @onready var capsule_shape = $CollisionShape3D.shape
 @onready var head = $Head
+@onready var hand = $Head/Camera3D/Hand
 @onready var camera = $Head/Camera3D
 @onready var camcorder_scene = $Head/Camera3D/Camarascene
 @onready var raycast = $Head/Camera3D/ObjectDetector
-
-@export var cubo_scene_rigidbody: RigidBody3D  
-@export var cubo_original: Node3D
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
 @onready var player_view_night_vision_shader: ColorRect = $CanvasLayer/NightVisionShader
 @onready var camcorder_canvas_layer: CanvasLayer = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer
 @onready var camcorder_night_vision_shader: ColorRect = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer/NightVisionShader
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
-@export var cubo_scene: PackedScene  
-@export var spawn_area: Node3D  
 
 var gravity: float = 9.8
 var crouched: bool = false
@@ -49,7 +45,10 @@ var initial_fov: float
 var zoomed_fov: float = 60.0
 var night_vision_was_on: bool = false
 
-#gravity anchor stuff
+# Multiply stuff
+var held_object: Node3D = null
+var can_multiply: bool = false
+
 var inverted: bool
 var north: bool
 var gravity_toggle: bool
@@ -57,22 +56,10 @@ var horizontal_anchor: bool
 var x_axis: bool
 var z_axis: bool
 
-@export var UI_Parent_Node: Control
-@export var player_anim_player: AnimationPlayer  
-@export var up_btn: Button
-@export var down_btn: Button
-@export var e_btn: Button
-@export var w_btn: Button
-@export var s_btn: Button
-@export var n_btn: Button
-
+@export var gravity_anchor_ui: Control
 var current_anchor: String
 
-# Número máximo de clones permitidos
-var max_clones: int = 5
-
 func _ready():
-	print("[Player] Iniciando _ready()")
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	initial_fov = camera.fov
 	player_canvas_layer.visible = false
@@ -80,38 +67,57 @@ func _ready():
 	camcorder_canvas_layer.visible = false
 	camcorder_night_vision_shader.visible = false
 	
-	down_btn.disabled = true
 	gravity_toggle = false
-	
-	# Usa função segura
-	safe_play_animation("idle")
+	play_animation("idle")
 	current_anchor = "down"
-	print("[Player] _ready() completo. Anchor inicial: %s" % current_anchor)
 
-func safe_play_animation(anim_name: String) -> void:
-	"""Reproduz animação apenas se ela existir - previne crashes"""
-	if not player_anim_player:
-		print("[Animation] ERRO: player_anim_player não está definido!")
-		return
-	
-	if player_anim_player.has_animation(anim_name):
-		player_anim_player.play(anim_name)
-		print("[Animation] ✓ Reproduzindo: '%s'" % anim_name)
+	if gravity_anchor_ui:
+		gravity_anchor_ui.visible = false
+		gravity_anchor_ui.anchor_selected.connect(_on_anchor_selected)
+
+func _on_anchor_selected(anchor: String):
+	current_anchor = anchor
+	match anchor:
+		"down":
+			_on_down_pressed()
+		"up":
+			_on_up_pressed()
+		"north":
+			_on_north_pressed()
+		"south":
+			_on_south_pressed()
+		"east":
+			_on_east_pressed()
+		"west":
+			_on_west_pressed()
+
+func play_animation(anim_name: String):
+	if animation_player.has_animation(anim_name):
+		animation_player.play(anim_name)
 	else:
-		print("[Animation] ⚠️ AVISO: Animação '%s' não existe!" % anim_name)
-		# Lista animações disponíveis
-		var available_anims = player_anim_player.get_animation_list()
+		var available_anims = animation_player.get_animation_list()
 		print("[Animation] Animações disponíveis: %s" % available_anims)
-		
-		# Tenta usar idle como fallback
-		if player_anim_player.has_animation("idle"):
-			player_anim_player.play("idle")
-			print("[Animation] → Usando 'idle' como fallback")
+		if animation_player.has_animation("idle"):
+			animation_player.play("idle")
 		else:
-			print("[Animation] → Nenhuma animação fallback disponível")
+			push_error("Nao tem nenhuma animation")
 
-func _process(delta: float) -> void:
-	gravity_toggle_func()
+func _process(_delta: float):
+	if Gamestate.has_camera:
+		if Input.is_action_just_pressed("use_camera"):
+			if animation_player.is_playing():
+				return
+			is_using_camera = !is_using_camera
+			update_camera_view()
+	
+	if is_using_camera:
+		Gamestate.is_using_camera = true
+		if Input.is_action_just_pressed("night_vision"):
+			night_vision_on = !night_vision_on
+			update_night_vision()
+		gravity_toggle_func()
+	else:
+		Gamestate.is_using_camera = false
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
@@ -120,22 +126,8 @@ func _unhandled_input(event):
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-40), deg_to_rad(60))
 
 func _physics_process(delta):
-	if Input.is_action_just_pressed("use_camera"):
-		if animation_player.is_playing():
-			return
-		is_using_camera = !is_using_camera
-		update_camera_view()
-	
-	if is_using_camera:
-		if Input.is_action_just_pressed("night_vision"):
-			night_vision_on = !night_vision_on
-			update_night_vision()
-		
 	if Input.is_action_just_pressed("interact"):
 		interact()
-	
-	if Input.is_action_just_pressed("reset_clones"):
-		apagar_clones()
 	
 	if Input.is_action_just_pressed("crouch_stand") and is_on_floor():
 		if is_crouching:
@@ -219,7 +211,18 @@ func _physics_process(delta):
 	if !is_using_camera and !is_swapping_modes:
 		var normal_target = BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses
 		camera.fov = lerp(camera.fov, normal_target, delta * 8.0)
+	
+	if held_object and is_using_camera and Gamestate.is_using_camera:
+		if Input.is_action_just_pressed("multiply"):
+			held_object.multiply()
+		
+		if Input.is_action_just_pressed("reset_clones"):
+			held_object.reset_all_clones()
 
+	if held_object and Input.is_action_just_pressed("drop"):
+		held_object.drop()
+		held_object = null
+		
 	move_and_slide()
 	check_hover_collision()
 
@@ -242,73 +245,67 @@ func can_stand() -> bool:
 	return collision == {}
 
 func check_hover_collision():
-	if raycast.is_colliding():
-		var hover_collider = raycast.get_collider()
-		if hover_collider and is_instance_valid(hover_collider):
-			var cubo_node = find_cubo_parent(hover_collider)
-			
-			if cubo_node and cubo_node.has_method("show_label"):
-				if current_interactable != cubo_node:
-					if current_interactable:
-						current_interactable.hide_label()
-					current_interactable = cubo_node
-					current_interactable.show_label()
-			elif hover_collider.has_method("show_label"):
-				if current_interactable != hover_collider:
-					if current_interactable:
-						current_interactable.hide_label()
-					current_interactable = hover_collider
-					current_interactable.show_label()
-			else:
-				hide_current_label()
-		else:
-			hide_current_label()
-	else:
+	if !raycast.is_colliding():
 		hide_current_label()
-
+		return
+		
+	var hover_collider = raycast.get_collider()
+	
+	if hover_collider is RigidBody3D:
+		if hover_collider.is_in_group("Multiplicable"):
+			if hover_collider.has_meta("is_multiplicable_clone") or hover_collider.get("is_clone"):
+				hide_current_label()
+				return
+			
+			if !hover_collider.has_method("show_label"):
+				hide_current_label()
+				return
+			
+			if current_interactable == hover_collider:
+				return
+			
+			hide_current_label()
+			current_interactable = hover_collider
+			current_interactable.show_label()
+			return
+	
+	if !hover_collider or !is_instance_valid(hover_collider) or !hover_collider.has_method("show_label"):
+		hide_current_label()
+		return
+	
+	if current_interactable == hover_collider:
+		return
+		
+	hide_current_label()
+	current_interactable = hover_collider
+	current_interactable.show_label()
+	
 func hide_current_label():
 	if current_interactable:
 		current_interactable.hide_label()
 		current_interactable = null
-
-func find_cubo_parent(node: Node) -> Node:
-	var current = node
-	var depth = 0
-	while current != null and depth < 10:
-		# PRIMEIRO verifica se tem a variável is_clone (é o Node3D do cubo)
-		if "is_clone" in current:
-			return current
-		
-		current = current.get_parent()
-		depth += 1
-	
-	return null
 
 func interact():
 	if not raycast.is_colliding():
 		return
 	
 	var hit = raycast.get_collider()
-	if hit == null:
-		return
-	
-	# Procura o nó raiz do cubo (Node3D com is_clone)
-	var cubo_node = find_cubo_parent(hit)
-	
-	if cubo_node:
-		# Verifica se tem a variável is_clone
-		if "is_clone" in cubo_node:
-			if not cubo_node.is_clone:
-				# É o cubo ORIGINAL - pode clonar
-				spawn_cubo_na_area()
+	if hit:
+		if hit.is_in_group("Camcorder"):
+			hit.pickup_camcorder()
+		elif hit.is_in_group("Multiplicable"):
+			if hit.has_meta("is_multiplicable_clone") or hit.is_clone:
+				return
+			
+			if held_object:
+				held_object.drop()
+				held_object = null
 			else:
-				# É um CLONE - não pode clonar
-				print("Este é um CLONE! Apenas o cubo original pode gerar novos cubos.")
-	else:
-		# Não é um cubo, tenta interagir normalmente
-		if hit.has_method("interact"):
+				hit.pickup(hand)
+				held_object = hit
+		elif hit.is_in_group("Interactable"):
 			hit.interact()
-
+			
 func update_camera_view():
 	is_swapping_modes = true
 	if is_using_camera:
@@ -324,7 +321,7 @@ func update_camera_view():
 		else:
 			player_view_night_vision_shader.visible = false
 			night_vision_was_on = false
-	
+
 func update_night_vision():
 	if night_vision_on:
 		player_canvas_layer.visible = true
@@ -336,244 +333,120 @@ func update_night_vision():
 		player_view_night_vision_shader.visible = false
 		camcorder_canvas_layer.visible = false
 		camcorder_night_vision_shader.visible = false
-	
-func _on_animation_player_animation_finished(anim_name: StringName) -> void:
+
+func _on_animation_player_animation_finished(_anim_name: StringName):
 	if !is_swapping_modes:
 		return
 		
 	camcorder_scene.visible = false
 	if is_using_camera:
 		camera.fov = zoomed_fov
-		if night_vision_was_on == true:
+		if night_vision_was_on:
 			player_view_night_vision_shader.visible = true
 	else:
 		camera.fov = initial_fov
 	is_swapping_modes = false
-	
-func random_position_in_area() -> Vector3:
-	if spawn_area == null:
-		return global_position
-	
-	var shape = spawn_area.get_node("CollisionShape3D").shape
-	var extents = shape.extents
-	
-	var x = randf_range(-extents.x, extents.x)
-	var z = randf_range(-extents.z, extents.z)
-	
-	var pos = spawn_area.global_position + Vector3(x, 0, z)
-	
-	# 🔒 FORÇAR ALTURA DO CUBO ORIGINAL
-	if cubo_original:
-		pos.y = cubo_original.global_position.y
-	
-	return pos
 
-
-func spawn_cubo_na_area():
-	if cubo_scene == null or spawn_area == null:
-		print("ERRO: cubo_scene ou spawn_area não definidos!")
-		return
-
-	# Contar clones existentes
-	var num_clones = get_tree().get_nodes_in_group("clones").size()
-
-	if num_clones >= max_clones:
-		print("Limite de clones atingido! Máximo: " + str(max_clones))
-		return
-
-	# Instanciar o cubo clone
-	var novo_cubo = cubo_scene.instantiate()
-	novo_cubo.global_position = random_position_in_area()
-	
-
-# GARANTIR escala limpa
-	novo_cubo.scale = Vector3.ONE
-
-	
-	# IMPORTANTE: Marcar como clone ANTES de adicionar à cena
-	if "is_clone" in novo_cubo:
-		novo_cubo.is_clone = true
-	
-	# Adicionar à cena
-	get_tree().current_scene.add_child(novo_cubo)
-	
-	
-	print("Clone criado! Total de clones: " + str(num_clones + 1))
-
-func apagar_clones():
-	var clones = get_tree().get_nodes_in_group("clones")
-	var count = clones.size()
-	for c in clones:
-		if is_instance_valid(c):
-			c.queue_free()
-	print("Clones apagados! Total removido: " + str(count))
-	print("Clones apagados. Agora:", get_tree().get_nodes_in_group("clones").size())
-
-func _on_down_pressed() -> void:
-	print("[Gravity] Botão DOWN pressionado")
+# Gravity Anchors
+func _on_down_pressed():
 	current_anchor = "down"
-	
-	safe_play_animation("idle")
+	play_animation("idle")
 	inverted = false
 	gravity = 9.8
-	n_btn.disabled = false
-	down_btn.disabled = true
-	up_btn.disabled = false
 	up_direction = Vector3.UP
 	JUMP_VELOCITY = 4.5
 	horizontal_anchor = false
-	s_btn.disabled = false
-	w_btn.disabled = false
-	e_btn.disabled = false
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: DOWN | gravity: %.1f | horizontal: %s" % [gravity, horizontal_anchor])
 
-func _on_up_pressed() -> void:
-	print("[Gravity] Botão UP pressionado")
+func _on_up_pressed():
 	current_anchor = "up"
-	
-	safe_play_animation("inverted")
+	play_animation("inverted")
 	inverted = true
 	gravity = -9.8
-	up_btn.disabled = true
-	down_btn.disabled = false
-	n_btn.disabled = false
 	up_direction = Vector3.DOWN
 	JUMP_VELOCITY = -4.5
 	horizontal_anchor = false
-	s_btn.disabled = false
-	w_btn.disabled = false
-	e_btn.disabled = false
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: UP | gravity: %.1f | horizontal: %s" % [gravity, horizontal_anchor])
 
-func _on_north_pressed() -> void:
-	print("[Gravity] Botão NORTH pressionado")
+func _on_north_pressed():
 	current_anchor = "north"
-	
 	horizontal_anchor = true
-	safe_play_animation("north")
+	play_animation("north")
 	inverted = true
 	gravity = 9.8
 	JUMP_VELOCITY = 4.5
 	up_direction = Vector3.RIGHT
 	x_axis = false
-	n_btn.disabled = true
-	up_btn.disabled = false
-	down_btn.disabled = false
-	s_btn.disabled = false
-	e_btn.disabled = false
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: NORTH | gravity: %.1f | horizontal: %s | x_axis: %s" % [gravity, horizontal_anchor, x_axis])
 
-func _on_south_pressed() -> void:
-	print("[Gravity] Botão SOUTH pressionado")
+func _on_south_pressed():
 	current_anchor = "south"
-	
 	horizontal_anchor = true
-	safe_play_animation("south")
+	play_animation("south")
 	gravity = -9.8
 	JUMP_VELOCITY = -4.5
 	up_direction = Vector3.LEFT
 	x_axis = true
-	n_btn.disabled = false
-	s_btn.disabled = true
-	up_btn.disabled = false
-	down_btn.disabled = false
-	w_btn.disabled = false
-	e_btn.disabled = false
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: SOUTH | gravity: %.1f | horizontal: %s | x_axis: %s" % [gravity, horizontal_anchor, x_axis])
 
-func _on_east_pressed() -> void:
-	print("[Gravity] Botão EAST pressionado")
+func _on_east_pressed():
 	current_anchor = "east"
-	
 	horizontal_anchor = true
-	safe_play_animation("east")
+	play_animation("east")
 	gravity = 9.8
 	JUMP_VELOCITY = 4.5
 	up_direction = Vector3.BACK
 	z_axis = false
-	n_btn.disabled = false
-	s_btn.disabled = false
-	up_btn.disabled = false
-	down_btn.disabled = false
-	e_btn.disabled = true
-	w_btn.disabled = false
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: EAST | gravity: %.1f | horizontal: %s | z_axis: %s" % [gravity, horizontal_anchor, z_axis])
 
-func _on_west_pressed() -> void:
-	print("[Gravity] Botão WEST pressionado")
+func _on_west_pressed():
 	current_anchor = "west"
-	
 	horizontal_anchor = true
-	safe_play_animation("west")
+	play_animation("west")
 	gravity = -9.8
 	JUMP_VELOCITY = -4.5
 	up_direction = Vector3.FORWARD
 	z_axis = true
-	n_btn.disabled = false
-	s_btn.disabled = false
-	up_btn.disabled = false
-	down_btn.disabled = false
-	e_btn.disabled = false
-	w_btn.disabled = true
-	
-	UI_Parent_Node.visible = false
-	print("[Gravity] Anchor configurado para: WEST | gravity: %.1f | horizontal: %s | z_axis: %s" % [gravity, horizontal_anchor, z_axis])
 
-func gravity_toggle_func() -> void:
+func gravity_toggle_func():
 	if Input.is_action_just_pressed("gravity_toggle"):
 		gravity_toggle = !gravity_toggle
-		print("[Gravity Toggle] Estado: %s" % ("ATIVO" if gravity_toggle else "INATIVO"))
 		
-	if gravity_toggle == true:
-		UI_Parent_Node.visible = true	
+	if gravity_toggle:
+		gravity_anchor_ui.visible = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif gravity_toggle == false:
-		UI_Parent_Node.visible = false
+	else:
+		gravity_anchor_ui.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	
+
 func vertical_grav_floor_movement(inv_bool: bool, direction, z_float: float):
 	if inverted == inv_bool:
 		velocity.x = direction.x * speed
 		velocity.z = z_float * direction.z * speed
 			
 func hori_grav_floor_movement_X(axis_bool: bool, axis_bool_state: bool, y_float: float, direction_2, z_float: float, direction_3, current_anchor_value: String):
-	if axis_bool == axis_bool_state && current_anchor == current_anchor_value:
+	if axis_bool == axis_bool_state and current_anchor == current_anchor_value:
 		velocity.y = y_float * direction_2 * speed
 		velocity.z = z_float * direction_3 * speed
 			
 func hori_grav_floor_movement_Z(axis_bool: bool, axis_bool_state: bool, x_float: float, direction_1, y_float: float, direction_2, current_anchor_value: String):
-	if axis_bool == axis_bool_state && current_anchor == current_anchor_value:
+	if axis_bool == axis_bool_state and current_anchor == current_anchor_value:
 		velocity.x = x_float * direction_1 * speed
 		velocity.y = y_float * direction_2 * speed
 			
 func gravity_calc(delta, anchor_bool: bool, grav_float: float, grav_float_2: float, grav_float_3: float):
-	if anchor_bool == true || anchor_bool == false:
+	if anchor_bool == true or anchor_bool == false:
 		velocity.x -= grav_float * delta
 		velocity.z -= grav_float_2 * delta
 		velocity.y -= grav_float_3 * delta
 
 func jump_calc(anchor_bool: bool, value_1: float, value_2: float, value_3: float):
-	if anchor_bool == true || anchor_bool == false:
+	if anchor_bool == true or anchor_bool == false:
 		velocity.y = value_1
 		velocity.x = value_2
 		velocity.z = value_3
 
 func lerp_after_mov_X(direction, delta, anchor_bool: bool, final_value: float, current_anchor_value: String):
-	if anchor_bool == true || anchor_bool == false && current_anchor == current_anchor_value:
+	if (anchor_bool == true or anchor_bool == false) and current_anchor == current_anchor_value:
 		velocity.y = lerp(velocity.y, direction.y * speed, delta * final_value)
 		velocity.z = lerp(velocity.z, direction.z * speed, delta * final_value)
 
 func lerp_after_mov_Z(direction, delta, anchor_bool: bool, final_value: float, current_anchor_value: String):
-	if anchor_bool == true || anchor_bool == false && current_anchor == current_anchor_value:
+	if (anchor_bool == true or anchor_bool == false) and current_anchor == current_anchor_value:
 		velocity.x = lerp(velocity.x, direction.x * speed, delta * final_value)
 		velocity.y = lerp(velocity.y, direction.y * speed, delta * final_value)

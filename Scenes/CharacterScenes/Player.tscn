@@ -1,9 +1,8 @@
 [gd_scene load_steps=18 format=3 uid="uid://c5ot8egiyermi"]
 
 [ext_resource type="Script" uid="uid://co5pdvvot5c46" path="res://Scripts/player.gd" id="1_xvlf0"]
-[ext_resource type="PackedScene" uid="uid://cl0cprhfr5f5a" path="res://Scenes/Camarascene.tscn" id="2_0g7u2"]
-[ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Nightvision.gdshader" id="3_dute7"]
-[ext_resource type="Animation" uid="uid://n6wqfhp1se07" path="res://Raise_Camera.res" id="4_uh3yh"]
+[ext_resource type="PackedScene" uid="uid://cl0cprhfr5f5a" path="res://Scenes/ObjectScenes/Camarascene.tscn" id="2_0g7u2"]
+[ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Shaders/Nightvision.gdshader" id="3_dute7"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ectt0"]
 
@@ -31,6 +30,22 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector3(0.1, -0.85, -0.20000002)]
+}
+
+[sub_resource type="Animation" id="Animation_dute7"]
+resource_name = "Raise_Camera"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Head/Camera3D/Camarascene:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0.1, -0.85, -0.20000002), Vector3(0.045, -0.075, 0.39)]
 }
 
 [sub_resource type="Animation" id="Animation_j0pmy"]
@@ -156,7 +171,7 @@ tracks/0/keys = {
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_uh3yh"]
 _data = {
 &"RESET": SubResource("Animation_uh3yh"),
-&"Raise_Camera": ExtResource("4_uh3yh"),
+&"Raise_Camera": SubResource("Animation_dute7"),
 &"back_to_idle": SubResource("Animation_j0pmy"),
 &"east": SubResource("Animation_kdgwr"),
 &"idle": SubResource("Animation_o5g2r"),
@@ -187,10 +202,14 @@ cull_mask = 1048559
 [node name="ObjectDetector" type="RayCast3D" parent="Head/Camera3D"]
 target_position = Vector3(0, 0, -2)
 collision_mask = 3
+collide_with_areas = true
 
 [node name="Camarascene" parent="Head/Camera3D" instance=ExtResource("2_0g7u2")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.1, -0.85, -0.20000002)
 visible = false
+
+[node name="Hand" type="Node3D" parent="Head/Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.59999996, -0.4, -1.1)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
