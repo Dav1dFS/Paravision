@@ -32,8 +32,8 @@ func _ready() -> void:
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("Invis_Toggle"):
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("Invis_Toggle") and Gamestate.is_using_camera:
 		invis_toggle = !invis_toggle
 		
 		#makes object invisible and deactivates colisions

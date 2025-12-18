@@ -1,0 +1,154 @@
+[gd_scene load_steps=4 format=3 uid="uid://c0lc4js3ka857"]
+
+[ext_resource type="Script" uid="uid://dopgti684c3ws" path="res://Scripts/gravity_anchor/gravity_anchor_ui.gd" id="1_dvy88"]
+[ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="1_uocgf"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_dvy88"]
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[node name="Gravity_Anchor_UI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dvy88")
+
+[node name="Y AXIS Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.257
+anchor_top = 0.365
+anchor_right = 0.257
+anchor_bottom = 0.365
+offset_left = -35.063995
+offset_top = -19.520004
+offset_right = 34.936005
+offset_bottom = 19.479996
+text = "X&Y AXIS"
+label_settings = SubResource("LabelSettings_dvy88")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="X AXIS Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.58100003
+anchor_top = 0.365
+anchor_right = 0.58100003
+anchor_bottom = 0.365
+offset_left = -24.312012
+offset_top = -19.520004
+offset_right = 24.687988
+offset_bottom = 19.479996
+text = "Z AXIS"
+label_settings = SubResource("LabelSettings_dvy88")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.48400003
+anchor_top = 0.16800001
+anchor_right = 0.48400003
+anchor_bottom = 0.16800001
+offset_left = -112.568054
+offset_top = 19.135994
+offset_right = 112.431946
+offset_bottom = 61.135994
+text = "PLACE ANCHOR"
+label_settings = ExtResource("1_uocgf")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WEST" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.264
+anchor_top = 0.5
+anchor_right = 0.264
+anchor_bottom = 0.509
+offset_left = -33.12799
+offset_top = 13.0
+offset_right = 32.87201
+offset_bottom = 73.168
+text = "WEST"
+icon_alignment = 1
+
+[node name="EAST" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.42100003
+anchor_top = 0.512
+anchor_right = 0.42100003
+anchor_bottom = 0.512
+offset_left = -32.992035
+offset_top = 7.223999
+offset_right = 33.007965
+offset_bottom = 73.224
+text = "EAST"
+
+[node name="NORTH" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.342
+anchor_top = 0.37300003
+anchor_right = 0.342
+anchor_bottom = 0.37300003
+offset_left = -33.307983
+offset_top = 7.29599
+offset_right = 32.692017
+offset_bottom = 73.29599
+text = "NORTH"
+
+[node name="SOUTH" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.34100002
+anchor_top = 0.657
+anchor_right = 0.34100002
+anchor_bottom = 0.657
+offset_left = -32.83203
+offset_top = 7.2640076
+offset_right = 33.16797
+offset_bottom = 73.26401
+text = "SOUTH"
+
+[node name="UP" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.67800003
+anchor_top = 0.37300003
+anchor_right = 0.67800003
+anchor_bottom = 0.37300003
+offset_left = -33.05603
+offset_top = 7.29599
+offset_right = 32.94397
+offset_bottom = 73.29599
+text = "UP"
+icon_alignment = 1
+
+[node name="DOWN" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.67700005
+anchor_top = 0.65400004
+anchor_right = 0.67700005
+anchor_bottom = 0.65400004
+offset_left = -32.904053
+offset_top = 7.2079773
+offset_right = 33.095947
+offset_bottom = 73.20798
+text = "DOWN
+"
+icon_alignment = 1
+
+[connection signal="pressed" from="WEST" to="." method="_on_west_pressed"]
+[connection signal="pressed" from="EAST" to="." method="_on_east_pressed"]
+[connection signal="pressed" from="NORTH" to="." method="_on_north_pressed"]
+[connection signal="pressed" from="SOUTH" to="." method="_on_south_pressed"]
+[connection signal="pressed" from="UP" to="." method="_on_up_pressed"]
+[connection signal="pressed" from="DOWN" to="." method="_on_down_pressed"]

@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://cl0cprhfr5f5a"]
 
 [ext_resource type="PackedScene" uid="uid://cg3mv56kx6cgn" path="res://Models/camcorder_cv.glb" id="1_uoqxe"]
-[ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Nightvision.gdshader" id="2_3a1hw"]
+[ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Shaders/Nightvision.gdshader" id="2_3a1hw"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_uoqxe"]
 viewport_path = NodePath("SubViewport")
@@ -21,9 +21,7 @@ shader_parameter/luminance = Color(0.3086, 0.6094, 0.082, 1)
 shader_parameter/base_color = Color(0.2, 1, 0.4, 1)
 shader_parameter/brightness = 2.0
 shader_parameter/noise_level = 0.499999988824
-shader_parameter/vignette_level = 0.5999999865888
-shader_parameter/edge_x = 0.75
-shader_parameter/edge_y = 4.0
+shader_parameter/vignette_radius = 0.9
 shader_parameter/flickering_level = 0.0
 
 [node name="Camarascene" type="Node3D"]
