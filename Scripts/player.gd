@@ -34,6 +34,7 @@ var fov_bonuses: float = 0.0
 @onready var camcorder_canvas_layer: CanvasLayer = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer
 @onready var camcorder_night_vision_shader: ColorRect = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer/NightVisionShader
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
+@onready var light_nv: OmniLight3D = $Head/Camera3D/OmniLight3D
 
 var gravity: float = 9.8
 var crouched: bool = false
@@ -66,6 +67,7 @@ func _ready():
 	player_view_night_vision_shader.visible = false
 	camcorder_canvas_layer.visible = false
 	camcorder_night_vision_shader.visible = false
+	light_nv.visible = false
 	
 	gravity_toggle = false
 	play_animation("idle")
@@ -324,6 +326,7 @@ func update_camera_view():
 
 func update_night_vision():
 	if night_vision_on:
+		light_nv.visible = true
 		player_canvas_layer.visible = true
 		player_view_night_vision_shader.visible = true
 		camcorder_canvas_layer.visible = true
@@ -333,6 +336,7 @@ func update_night_vision():
 		player_view_night_vision_shader.visible = false
 		camcorder_canvas_layer.visible = false
 		camcorder_night_vision_shader.visible = false
+		light_nv.visible = false
 
 func _on_animation_player_animation_finished(_anim_name: StringName):
 	if !is_swapping_modes:
