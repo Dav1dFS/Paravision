@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=5 format=3 uid="uid://d3jukedhwsdua"]
+
+[ext_resource type="Texture2D" uid="uid://c8yc8akiqd1qr" path="res://textures/Tiles058_1K-JPG/Tiles058_1K-JPG_Color.jpg" id="1_mf680"]
+[ext_resource type="Texture2D" uid="uid://vk5exvrhbwcw" path="res://textures/Tiles058_1K-JPG/Tiles058_1K-JPG_Metalness.jpg" id="2_ulfj4"]
+[ext_resource type="Texture2D" uid="uid://20umn8gs30df" path="res://textures/Tiles058_1K-JPG/Tiles058_1K-JPG_NormalDX.jpg" id="3_5uuow"]
+[ext_resource type="Texture2D" uid="uid://5o58ub7p8ub" path="res://textures/Tiles058_1K-JPG/Tiles058_1K-JPG_Roughness.jpg" id="4_wf6gv"]
+
+[resource]
+albedo_texture = ExtResource("1_mf680")
+metallic = 1.0
+metallic_texture = ExtResource("2_ulfj4")
+roughness_texture = ExtResource("4_wf6gv")
+normal_enabled = true
+normal_texture = ExtResource("3_5uuow")
