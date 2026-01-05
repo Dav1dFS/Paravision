@@ -11,6 +11,8 @@ var invis_toggle:bool
 
 @export var player:CharacterBody3D
 
+@export var light:OmniLight3D
+
 var respawn_coords:Vector3
 
 var og_color:Color
@@ -21,6 +23,8 @@ var og_color:Color
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	invis_toggle = true
+	
+	light.visible = false
 	
 	#save original color
 	og_color = invis_mat.albedo_color
@@ -40,12 +44,14 @@ func _process(_delta: float) -> void:
 		if invis_toggle == true:
 			print("invis_toggle ON")
 			invis_mat.albedo_color = og_color
+			light.visible = false
 			#colision_shape.set_deferred("disabled", true)
 			
 		#makes object visible again and activates colisions
 		if invis_toggle == false:
 			print("invis_toggle OFF")
 			invis_mat.albedo_color = "ff00ff"
+			light.visible = true
 			#colision_shape.set_deferred("disabled", false)
 	pass
 

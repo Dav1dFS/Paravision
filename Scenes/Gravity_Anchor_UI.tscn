@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c0lc4js3ka857"]
 
-[ext_resource type="Script" uid="uid://dopgti684c3ws" path="res://Scripts/gravity_anchor/gravity_anchor_ui.gd" id="1_dvy88"]
+[ext_resource type="Script" uid="uid://7x1tsdebr14k" path="res://Scripts/gravity_anchor/gravity_anchor_ui.gd" id="1_dvy88"]
 [ext_resource type="LabelSettings" uid="uid://ct6v0sy7rhaqq" path="res://materials/ui_LABEL_SETTINGS.tres" id="1_uocgf"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_dvy88"]

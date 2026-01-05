@@ -35,8 +35,13 @@ folder_colors={
 "res://Scripts/": "pink",
 "res://Scripts/scripts_invis_mode/": "pink",
 "res://addons/": "purple",
-"res://materials/": "red"
+"res://materials/": "red",
+"res://textures/": "green"
 }
+
+[filesystem]
+
+import/blender/enabled=false
 
 [global_group]
 

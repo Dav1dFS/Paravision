@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://dxeetxn7511c"]
+
+[ext_resource type="Texture2D" uid="uid://dyjk4yh8akl7y" path="res://textures/Concrete031_1K-JPG/Concrete031_1K-JPG_Color.jpg" id="1_kphyi"]
+[ext_resource type="Texture2D" uid="uid://dlagrjx2l4uw2" path="res://textures/Concrete031_1K-JPG/Concrete031_1K-JPG_NormalDX.jpg" id="2_3m5nh"]
+[ext_resource type="Texture2D" uid="uid://bi3u1repdfxwp" path="res://textures/Concrete031_1K-JPG/Concrete031_1K-JPG_Roughness.jpg" id="3_f1gq2"]
+
+[resource]
+albedo_texture = ExtResource("1_kphyi")
+roughness_texture = ExtResource("3_f1gq2")
+normal_enabled = true
+normal_texture = ExtResource("2_3m5nh")
+uv1_scale = Vector3(15, 15, 15)
