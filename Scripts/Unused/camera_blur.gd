@@ -11,7 +11,7 @@ var lerp_speed: float = 10.0
 func _ready():
 	attributes.dof_blur_near_enabled = false
 
-func _physics_process(delta: float) -> void:
+func _physics_process(delta: float):
 	object_detector.target_position.z = blur_range
 	
 	if object_detector.is_colliding():	

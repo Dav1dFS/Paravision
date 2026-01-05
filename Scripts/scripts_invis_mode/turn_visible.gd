@@ -59,4 +59,4 @@ func _process(_delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Player"):
 			print("you died!")
-			player.transform.origin = respawn_coords
+			player.transform.origin = respawn_coords + Vector3.UP * 1.0

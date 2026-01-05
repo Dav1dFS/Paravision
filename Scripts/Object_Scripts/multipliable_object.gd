@@ -2,7 +2,7 @@ extends RigidBody3D
 
 @export var max_multiplications: int = 5
 @export var scene_root: Node3D
-@onready var interact_label: Label3D = $Label3D
+@export var interact_label: Label3D
 
 var is_held: bool = false
 var player_hand_node: Node3D = null
@@ -15,7 +15,8 @@ func _ready():
 		remove_interactivity()
 		return
 
-	interact_label.visible = false
+	if interact_label and is_instance_valid(interact_label):
+		interact_label.visible = false
 	
 	original_collision_layer = collision_layer
 	original_collision_mask = collision_mask
@@ -25,23 +26,40 @@ func _ready():
 	max_contacts_reported = 4
 	gravity_scale = 1.0
 
+func _process(_delta):
+	if interact_label and is_instance_valid(interact_label):
+		interact_label.global_position = global_position + Vector3.UP * 0.6
+
 func remove_interactivity():
-	if interact_label:
-		interact_label.queue_free()
-		
+	hide_label()
+	interact_label = null
 	remove_from_group("Multiplicable")
 	
-	# Garante física ativa
 	freeze = false
 	gravity_scale = 1.0
 
 func show_label():
-	if not is_held and not is_clone:
-		interact_label.visible = true
+	if is_held or is_clone:
+		return
+		
+	if interact_label == null:
+		return
+		
+	if !is_instance_valid(interact_label):
+		interact_label = null
+		return
+		
+	interact_label.visible = true
 
 func hide_label():
-	if interact_label:
-		interact_label.visible = false
+	if interact_label == null:
+		return
+		
+	if !is_instance_valid(interact_label):
+		interact_label = null
+		return
+		
+	interact_label.visible = false
 
 func pickup(hand_node: Node3D):
 	if is_held or is_clone:
@@ -54,12 +72,10 @@ func pickup(hand_node: Node3D):
 	current_parent.remove_child(self)
 	hand_node.add_child(self)
 	
-	# Reseta a transformação local para ficar na posição correta da mão
 	transform = Transform3D.IDENTITY
 	position = Vector3.ZERO
 	rotation = Vector3.ZERO
 	
-	# Desabilita física enquanto está na mão
 	freeze = true
 	collision_layer = 0
 	collision_mask = 0
@@ -72,7 +88,6 @@ func drop():
 		
 	is_held = false
 	
-	# Guarda a posição e rotação global ANTES de remover
 	var drop_position = global_position
 	var drop_rotation = global_rotation
 	var drop_basis = global_transform.basis
@@ -83,13 +98,11 @@ func drop():
 	global_position = drop_position
 	global_rotation = drop_rotation
 	
-	# Reabilita física
 	freeze = false
 	collision_layer = original_collision_layer
 	collision_mask = original_collision_mask
 	gravity_scale = 1.0
 	
-	# Adiciona um pequeno impulso para frente
 	var forward_direction = -drop_basis.z
 	apply_central_impulse(forward_direction * 3.0)
 
@@ -99,40 +112,36 @@ func multiply():
 		
 	var clones_count = 0
 	for child in scene_root.get_children():
-		if child.is_in_group("Multiplicable") or (child is RigidBody3D and child.has_meta("is_multiplicable_clone")):
+		if child is RigidBody3D and (child.is_in_group("Multiplicable") or child.has_meta("is_multiplicable_clone")):
 			clones_count += 1
 	
 	if clones_count >= max_multiplications:
 		return
 	
-	# Cria um clone SIMPLES sem script
 	var clone = duplicate(DUPLICATE_USE_INSTANTIATION)
 	clone.is_clone = true
 	clone.set_meta("is_multiplicable_clone", true)
-	
-	var clone_label = clone.get_node_or_null("Label3D")
-	if clone_label:
-		clone_label.queue_free()
-	
+	clone.interact_label = null
 	clone.remove_from_group("Multiplicable")
+	
 	scene_root.add_child(clone)
 	
-	# Posiciona o clone próximo à mão do jogador
-	var spawn_offset = Vector3(randf_range(-1.0, 1.0), randf_range(0.5, 1.5), randf_range(-1.0, 1.0))
+	var spawn_offset = Vector3(
+		randf_range(-1.0, 1.0),
+		randf_range(0.5, 1.5),
+		randf_range(-1.0, 1.0)
+	)
+	
 	clone.global_position = player_hand_node.global_position + spawn_offset
 	clone.rotation = Vector3(randf_range(0, TAU), randf_range(0, TAU), randf_range(0, TAU))
 	
-	# Garante que o clone tem física ativa
 	clone.freeze = false
 	clone.collision_layer = original_collision_layer
 	clone.collision_mask = original_collision_mask
 	clone.gravity_scale = 1.0
 
 func reset_all_clones():
-	var clones_removed = 0
-
-	# Cria uma lista dos clones para remover (evita modificar array durante iteração)
-	var clones_to_remove = []
+	var clones_to_remove := []
 	
 	for child in scene_root.get_children():
 		if child is RigidBody3D and child != self:
@@ -141,4 +150,3 @@ func reset_all_clones():
 	
 	for clone in clones_to_remove:
 		clone.queue_free()
-		clones_removed += 1

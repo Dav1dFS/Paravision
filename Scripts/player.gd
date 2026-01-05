@@ -19,7 +19,7 @@ var T_BOB: float = 0.0
 
 const BASE_FOV: float = 75.0
 const FOV_CHANGE: float = 1.5
-const RUN_FOV_BONUS: float = 6.0
+const RUN_FOV_BONUS: float = 8.0
 var fov_bonuses: float = 0.0
 
 @onready var player_collider = $CollisionShape3D
@@ -33,8 +33,11 @@ var fov_bonuses: float = 0.0
 @onready var player_view_night_vision_shader: ColorRect = $CanvasLayer/NightVisionShader
 @onready var camcorder_canvas_layer: CanvasLayer = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer
 @onready var camcorder_night_vision_shader: ColorRect = $Head/Camera3D/Camarascene/SubViewport/CanvasLayer/NightVisionShader
+@onready var cam_overlay: TextureRect = $CanvasLayer/CamOverlay
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var light_nv: OmniLight3D = $Head/Camera3D/OmniLight3D
+@onready var night_vision_audio: AudioStreamPlayer3D = $Head/Camera3D/AudioNV
+@onready var camera_audio: AudioStreamPlayer3D = $Head/Camera3D/AudioCam
 
 var gravity: float = 9.8
 var crouched: bool = false
@@ -65,7 +68,8 @@ func _ready():
 	initial_fov = camera.fov
 	player_canvas_layer.visible = false
 	player_view_night_vision_shader.visible = false
-	camcorder_canvas_layer.visible = false
+	#camcorder_canvas_layer.visible = false
+	cam_overlay.visible = false
 	camcorder_night_vision_shader.visible = false
 	light_nv.visible = false
 	
@@ -122,10 +126,13 @@ func _process(_delta: float):
 		Gamestate.is_using_camera = false
 
 func _unhandled_input(event):
+	if gravity_toggle:
+		return
+		
 	if event is InputEventMouseMotion:
 		head.rotate_y(-event.relative.x * SENSITIVITY)
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
-		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-40), deg_to_rad(60))
+		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-80), deg_to_rad(60))
 
 func _physics_process(delta):
 	if Input.is_action_just_pressed("interact"):
@@ -210,7 +217,7 @@ func _physics_process(delta):
 	else:
 		fov_bonuses = 0.0
 
-	if !is_using_camera and !is_swapping_modes:
+	if !is_using_camera:
 		var normal_target = BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses
 		camera.fov = lerp(camera.fov, normal_target, delta * 8.0)
 	
@@ -235,8 +242,10 @@ func _headbob(time) -> Vector3:
 	return pos
 
 func can_stand() -> bool:
-	var head_position = global_transform.origin + Vector3(0, capsule_shape.height * 0.5, 0)
-	var stand_target_point = head_position + Vector3.UP * (standing_height - capsule_shape.height + 0.05)
+	
+	var up = up_direction.normalized()
+	var head_position = global_transform.origin + up * (capsule_shape.height * 0.5)
+	var stand_target_point = head_position + up * (standing_height - capsule_shape.height + 0.05)
 
 	var ray_params = PhysicsRayQueryParameters3D.new()
 	ray_params.from = head_position
@@ -317,6 +326,7 @@ func update_camera_view():
 		animation_player.play_backwards("Raise_Camera")
 		camera.fov = initial_fov
 		camcorder_scene.visible = true
+		cam_overlay.visible = false
 		if player_view_night_vision_shader.visible == true:
 			player_view_night_vision_shader.visible = false
 			night_vision_was_on = true
@@ -326,15 +336,17 @@ func update_camera_view():
 
 func update_night_vision():
 	if night_vision_on:
-		light_nv.visible = true
-		player_canvas_layer.visible = true
+		#light_nv.visible = true
+		#player_canvas_layer.visible = true
+		night_vision_audio.play()
 		player_view_night_vision_shader.visible = true
 		camcorder_canvas_layer.visible = true
 		camcorder_night_vision_shader.visible = true
 	else:
-		player_canvas_layer.visible = false
+		night_vision_audio.stop()
+		#player_canvas_layer.visible = false
 		player_view_night_vision_shader.visible = false
-		camcorder_canvas_layer.visible = false
+		#camcorder_canvas_layer.visible = false
 		camcorder_night_vision_shader.visible = false
 		light_nv.visible = false
 
@@ -344,11 +356,16 @@ func _on_animation_player_animation_finished(_anim_name: StringName):
 		
 	camcorder_scene.visible = false
 	if is_using_camera:
+		camera_audio.play()
+		player_canvas_layer.visible = true
+		cam_overlay.visible = true
 		camera.fov = zoomed_fov
 		if night_vision_was_on:
 			player_view_night_vision_shader.visible = true
 	else:
-		camera.fov = initial_fov
+		camera_audio.stop()
+		return
+		#camera.fov = initial_fov
 	is_swapping_modes = false
 
 # Gravity Anchors

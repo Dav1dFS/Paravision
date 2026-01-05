@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://cl0cprhfr5f5a"]
+[gd_scene load_steps=8 format=3 uid="uid://cl0cprhfr5f5a"]
 
 [ext_resource type="PackedScene" uid="uid://cg3mv56kx6cgn" path="res://Models/camcorder_cv.glb" id="1_uoqxe"]
 [ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Shaders/Nightvision.gdshader" id="2_3a1hw"]
+[ext_resource type="Texture2D" uid="uid://qucgxlmi1d2e" path="res://cam_overlay.png" id="3_xa505"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_uoqxe"]
 viewport_path = NodePath("SubViewport")
@@ -55,6 +56,7 @@ layers = 16
 [node name="CanvasLayer" type="CanvasLayer" parent="SubViewport"]
 
 [node name="NightVisionShader" type="ColorRect" parent="SubViewport/CanvasLayer"]
+visible = false
 material = SubResource("ShaderMaterial_tgcjc")
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,3 +64,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="CamOverlay" type="TextureRect" parent="SubViewport/CanvasLayer"]
+modulate = Color(1, 1, 1, 0.72156864)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -5.17
+offset_top = -6.027
+offset_right = -0.17001343
+offset_bottom = -0.026992798
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_xa505")
+expand_mode = 5

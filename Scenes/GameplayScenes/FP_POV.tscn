@@ -1,7 +1,7 @@
-[gd_scene load_steps=74 format=3 uid="uid://datdmgi41liy2"]
+[gd_scene load_steps=75 format=3 uid="uid://datdmgi41liy2"]
 
 [ext_resource type="Material" uid="uid://bainxq7so2d02" path="res://materials/decorative materials/bricks.tres" id="1_d345f"]
-[ext_resource type="Script" uid="uid://bg0g8sijiiqsb" path="res://Scripts/Object_Scripts/interactable_objects.gd" id="1_r57x1"]
+[ext_resource type="Script" uid="uid://brvh8jhrd08h7" path="res://Scripts/Object_Scripts/interactable_objects.gd" id="1_r57x1"]
 [ext_resource type="Texture2D" uid="uid://chmpnp2wyltsf" path="res://textures/Tiles006_1K-JPG/Tiles006_1K-JPG_Color.jpg" id="2_04b6x"]
 [ext_resource type="Material" uid="uid://dxeetxn7511c" path="res://materials/decorative materials/concrete_1.tres" id="2_dsypj"]
 [ext_resource type="PackedScene" uid="uid://cl0cprhfr5f5a" path="res://Scenes/ObjectScenes/Camarascene.tscn" id="2_rw87y"]
@@ -11,13 +11,13 @@
 [ext_resource type="Texture2D" uid="uid://gdn6fjwqdirp" path="res://textures/Bricks066_1K-JPG/Bricks066_1K-JPG_NormalDX.jpg" id="4_bsdkk"]
 [ext_resource type="Texture2D" uid="uid://cyhn5nme110r4" path="res://textures/Tiles006_1K-JPG/Tiles006_1K-JPG_Roughness.jpg" id="4_i56ka"]
 [ext_resource type="PackedScene" uid="uid://c5ot8egiyermi" path="res://Scenes/CharacterScenes/Player.tscn" id="5_gi4ke"]
-[ext_resource type="Script" uid="uid://b6w0rjtddq7vh" path="res://Scripts/scripts_invis_mode/turn_invisible.gd" id="5_pgpkb"]
+[ext_resource type="Script" uid="uid://dbxufhupej0ly" path="res://Scripts/scripts_invis_mode/turn_invisible.gd" id="5_pgpkb"]
 [ext_resource type="PackedScene" uid="uid://c0lc4js3ka857" path="res://Scenes/Gravity_Anchor_UI.tscn" id="5_r57x1"]
 [ext_resource type="Texture2D" uid="uid://kiuny8ktm5tp" path="res://textures/Bricks066_1K-JPG/Bricks066_1K-JPG_Roughness.jpg" id="5_v15l2"]
 [ext_resource type="Texture2D" uid="uid://40hupv531wfo" path="res://textures/PaintedWood009C_1K-JPG/PaintedWood009C_1K-JPG_Color.jpg" id="6_g4ray"]
 [ext_resource type="Material" uid="uid://cesmr4rpr1ghb" path="res://materials/visible_material.tres" id="6_tyggw"]
 [ext_resource type="Texture2D" uid="uid://7ueuopca7dco" path="res://textures/PaintedWood009C_1K-JPG/PaintedWood009C_1K-JPG_NormalDX.jpg" id="7_ala3l"]
-[ext_resource type="Script" uid="uid://bncb5dhnfqhpq" path="res://Scripts/scripts_invis_mode/turn_visible.gd" id="7_t1vol"]
+[ext_resource type="Script" uid="uid://minq3fibfxbc" path="res://Scripts/scripts_invis_mode/turn_visible.gd" id="7_t1vol"]
 [ext_resource type="Texture2D" uid="uid://3sjgeqfxvsf7" path="res://textures/PaintedWood009C_1K-JPG/PaintedWood009C_1K-JPG_Roughness.jpg" id="8_mxrt5"]
 [ext_resource type="Material" uid="uid://bjd1haq75gskn" path="res://materials/invis_mat.tres" id="8_t1vol"]
 [ext_resource type="Material" uid="uid://d2y7rme2dm45a" path="res://materials/decorative materials/wood.tres" id="9_8tpxb"]
@@ -33,6 +33,7 @@
 [ext_resource type="Texture2D" uid="uid://h53g1r2le80h" path="res://textures/Concrete032_1K-JPG/Concrete032_1K-JPG_Roughness.jpg" id="21_iaq2n"]
 [ext_resource type="Material" uid="uid://cyft0cd2lxoch" path="res://materials/decorative materials/concrete_2.tres" id="22_y2viw"]
 [ext_resource type="Texture2D" uid="uid://bmxtrqp3xcq5s" path="res://textures/Concrete032_1K-JPG/Concrete032_1K-JPG_Color.jpg" id="23_3tmwt"]
+[ext_resource type="AudioStream" uid="uid://dld7l4avclmwk" path="res://Sounds/creepy_ambient.mp3" id="34_ri52a"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_paq3w"]
 
@@ -318,6 +319,11 @@ normal_texture = ExtResource("20_xmj7s")
 uv1_scale = Vector3(2, 2, 2)
 
 [node name="World" type="Node3D"]
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("34_ri52a")
+autoplay = true
+parameters/looping = true
 
 [node name="laser" type="Area3D" parent="." node_paths=PackedStringArray("area_obj", "respawn_point", "player", "light")]
 transform = Transform3D(-6.053597e-08, 0.029317267, -0.9995702, -0.7270542, 0.686285, 0.020128695, 0.6865802, 0.7267417, 0.021315198, -5.3977356, 1.779904, 5.336127)
@@ -645,7 +651,7 @@ material = SubResource("StandardMaterial3D_uaiyu")
 [node name="text" type="Label3D" parent="Map/sign Multiplier"]
 transform = Transform3D(-1, 0, -8.754432e-08, 0, 1, 0, 8.754432e-08, 0, -1, -0.0048925877, -0.08069134, -0.023002625)
 text = "Use the Multiplier mode [3]
-this cube can be duplicated!
+Press [R] to reset clones made!
 "
 font_size = 20
 outline_size = 10
@@ -866,11 +872,20 @@ use_collision = true
 size = Vector3(4.123047, 0.26464844, 3.506836)
 material = SubResource("StandardMaterial3D_77tyy")
 
-[node name="MultipliableObject" parent="Map" node_paths=PackedStringArray("scene_root") instance=ExtResource("9_t1vol")]
+[node name="MultipliableObject" parent="Map" node_paths=PackedStringArray("scene_root", "interact_label") instance=ExtResource("9_t1vol")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.271713, 2.0443764, -4.8164663)
 scene_root = NodePath("../..")
+interact_label = NodePath("../Label3D2")
 
-[node name="Player" parent="." node_paths=PackedStringArray("gravity_anchor_ui") instance=ExtResource("5_gi4ke")]
+[node name="Label3D2" type="Label3D" parent="Map"]
+transform = Transform3D(0.49999997, 0, 0.86602545, 0, 1, 0, -0.86602545, 0, 0.49999997, 18.271713, 2.4443765, -4.8164663)
+layers = 3
+billboard = 1
+texture_filter = 1
+text = "Press [E] to Interact"
+font_size = 28
+
+[node name="Player" parent="." node_paths=PackedStringArray("gravity_anchor_ui") groups=["Player"] instance=ExtResource("5_gi4ke")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 gravity_anchor_ui = NodePath("../Gravity_Anchor_UI")
 

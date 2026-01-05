@@ -7,8 +7,8 @@ var gravity_anchor_unlocked: bool = false
 
 var game_paused: bool = false
 
-func _ready() -> void:
+func _ready():
 	pass
 
-func _process(_delta: float) -> void:
+func _process(_delta: float):
 	pass

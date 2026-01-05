@@ -1,8 +1,11 @@
-[gd_scene load_steps=18 format=3 uid="uid://c5ot8egiyermi"]
+[gd_scene load_steps=21 format=3 uid="uid://c5ot8egiyermi"]
 
 [ext_resource type="Script" uid="uid://co5pdvvot5c46" path="res://Scripts/player.gd" id="1_xvlf0"]
 [ext_resource type="PackedScene" uid="uid://cl0cprhfr5f5a" path="res://Scenes/ObjectScenes/Camarascene.tscn" id="2_0g7u2"]
 [ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Shaders/Nightvision.gdshader" id="3_dute7"]
+[ext_resource type="AudioStream" uid="uid://bcr76lnl5lfme" path="res://Sounds/nightvision.wav" id="3_kdgwr"]
+[ext_resource type="AudioStream" uid="uid://ck1n8mo5us1ou" path="res://Sounds/cameraon.wav" id="4_o5g2r"]
+[ext_resource type="Texture2D" uid="uid://qucgxlmi1d2e" path="res://cam_overlay.png" id="6_kdgwr"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ectt0"]
 
@@ -216,6 +219,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.59999996, -0.4, -1.1)
 shadow_enabled = true
 distance_fade_enabled = true
 
+[node name="AudioNV" type="AudioStreamPlayer3D" parent="Head/Camera3D"]
+stream = ExtResource("3_kdgwr")
+
+[node name="AudioCam" type="AudioStreamPlayer3D" parent="Head/Camera3D"]
+stream = ExtResource("4_o5g2r")
+
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="NightVisionShader" type="ColorRect" parent="CanvasLayer"]
@@ -226,6 +235,21 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="CamOverlay" type="TextureRect" parent="CanvasLayer"]
+modulate = Color(1, 1, 1, 0.72156864)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -45.0
+offset_top = -45.6875
+offset_right = 41.0
+offset_bottom = 48.3125
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_kdgwr")
+expand_mode = 5
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
