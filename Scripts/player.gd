@@ -38,6 +38,7 @@ var fov_bonuses: float = 0.0
 @onready var light_nv: OmniLight3D = $Head/Camera3D/OmniLight3D
 @onready var night_vision_audio: AudioStreamPlayer3D = $Head/Camera3D/AudioNV
 @onready var camera_audio: AudioStreamPlayer3D = $Head/Camera3D/AudioCam
+@onready var pause_menu: CanvasLayer = $CanvasLayer2
 
 var gravity: float = 9.8
 var crouched: bool = false
@@ -48,6 +49,7 @@ var is_swapping_modes: bool = false
 var initial_fov: float
 var zoomed_fov: float = 60.0
 var night_vision_was_on: bool = false
+var is_paused: bool = false
 
 # Multiply stuff
 var held_object: Node3D = null
@@ -65,6 +67,7 @@ var current_anchor: String
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	pause_menu.visible = false
 	initial_fov = camera.fov
 	player_canvas_layer.visible = false
 	player_view_night_vision_shader.visible = false
@@ -80,7 +83,8 @@ func _ready():
 	if gravity_anchor_ui:
 		gravity_anchor_ui.visible = false
 		gravity_anchor_ui.anchor_selected.connect(_on_anchor_selected)
-
+		
+	process_mode = Node.PROCESS_MODE_ALWAYS
 func _on_anchor_selected(anchor: String):
 	current_anchor = anchor
 	match anchor:
@@ -109,131 +113,136 @@ func play_animation(anim_name: String):
 			push_error("Nao tem nenhuma animation")
 
 func _process(_delta: float):
-	if Gamestate.has_camera:
-		if Input.is_action_just_pressed("use_camera"):
-			if animation_player.is_playing():
-				return
-			is_using_camera = !is_using_camera
-			update_camera_view()
-	
-	if is_using_camera:
-		Gamestate.is_using_camera = true
-		if Input.is_action_just_pressed("night_vision"):
-			night_vision_on = !night_vision_on
-			update_night_vision()
-		gravity_toggle_func()
-	else:
-		Gamestate.is_using_camera = false
+	if !is_paused:
+		if Gamestate.has_camera:
+			if Input.is_action_just_pressed("use_camera"):
+				if animation_player.is_playing():
+					return
+				is_using_camera = !is_using_camera
+				update_camera_view()
+		
+		if is_using_camera:
+			Gamestate.is_using_camera = true
+			if Input.is_action_just_pressed("night_vision"):
+				night_vision_on = !night_vision_on
+				update_night_vision()
+			gravity_toggle_func()
+		else:
+			Gamestate.is_using_camera = false
 
 func _unhandled_input(event):
 	if gravity_toggle:
 		return
-		
+	
+	if Input.is_action_just_pressed("pause"):
+		toggle_pause()
+				
 	if event is InputEventMouseMotion:
 		head.rotate_y(-event.relative.x * SENSITIVITY)
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-80), deg_to_rad(80))
 
 func _physics_process(delta):
-	if Input.is_action_just_pressed("interact"):
-		interact()
-	
-	if Input.is_action_just_pressed("crouch_stand") and is_on_floor():
+	if !is_paused:
+		if Input.is_action_just_pressed("interact"):
+			interact()
+		
+		if Input.is_action_just_pressed("crouch_stand") and is_on_floor():
+			if is_crouching:
+				if can_stand():
+					is_crouching = false
+			else:
+				is_crouching = true
+
 		if is_crouching:
-			if can_stand():
-				is_crouching = false
+			target_height = crouch_height
+			speed = CROUCH_SPEED
+			is_sprinting = false
 		else:
-			is_crouching = true
+			target_height = standing_height
+			speed = SPRINT_SPEED if Input.is_action_pressed("run") else WALK_SPEED
+			is_sprinting = Input.is_action_pressed("run")
 
-	if is_crouching:
-		target_height = crouch_height
-		speed = CROUCH_SPEED
-		is_sprinting = false
-	else:
-		target_height = standing_height
-		speed = SPRINT_SPEED if Input.is_action_pressed("run") else WALK_SPEED
-		is_sprinting = Input.is_action_pressed("run")
+		capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
 
-	capsule_shape.height = lerp(capsule_shape.height, target_height, delta * 6.0)
-
-	if not is_on_floor():
-		match horizontal_anchor:
-			false:
-				gravity_calc(delta, inverted, 0, 0, gravity)
-			true:
-				gravity_calc(delta, x_axis, gravity, 0, 0)
-				gravity_calc(delta, z_axis, 0, gravity, 0)
-	
-	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
-		match horizontal_anchor:
-			false:
-				jump_calc(inverted, JUMP_VELOCITY, velocity.x, velocity.z)
-			true:
-				jump_calc(x_axis, velocity.y, JUMP_VELOCITY, velocity.z)
-				jump_calc(z_axis, velocity.y, velocity.x, JUMP_VELOCITY)
-
-	var input_dir := Input.get_vector("left", "right", "forward", "back")
-	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-
-	if is_on_floor():
-		if direction:
+		if not is_on_floor():
 			match horizontal_anchor:
 				false:
-					vertical_grav_floor_movement(false, direction, 1)
-					vertical_grav_floor_movement(true, direction, -1)
+					gravity_calc(delta, inverted, 0, 0, gravity)
 				true:
-					hori_grav_floor_movement_X(x_axis, false, -1, direction.x, 1, direction.z, "north")
-					hori_grav_floor_movement_X(x_axis, true, 1, direction.x, 1, direction.z, "south")
-					hori_grav_floor_movement_Z(z_axis, false, 1, direction.x, -1, direction.z, "east")
-					hori_grav_floor_movement_Z(z_axis, true, 1, direction.x, 1, direction.z, "west")
+					gravity_calc(delta, x_axis, gravity, 0, 0)
+					gravity_calc(delta, z_axis, 0, gravity, 0)
+		
+		if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
+			match horizontal_anchor:
+				false:
+					jump_calc(inverted, JUMP_VELOCITY, velocity.x, velocity.z)
+				true:
+					jump_calc(x_axis, velocity.y, JUMP_VELOCITY, velocity.z)
+					jump_calc(z_axis, velocity.y, velocity.x, JUMP_VELOCITY)
+
+		var input_dir := Input.get_vector("left", "right", "forward", "back")
+		var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+
+		if is_on_floor():
+			if direction:
+				match horizontal_anchor:
+					false:
+						vertical_grav_floor_movement(false, direction, 1)
+						vertical_grav_floor_movement(true, direction, -1)
+					true:
+						hori_grav_floor_movement_X(x_axis, false, -1, direction.x, 1, direction.z, "north")
+						hori_grav_floor_movement_X(x_axis, true, 1, direction.x, 1, direction.z, "south")
+						hori_grav_floor_movement_Z(z_axis, false, 1, direction.x, -1, direction.z, "east")
+						hori_grav_floor_movement_Z(z_axis, true, 1, direction.x, 1, direction.z, "west")
+			else:
+				if horizontal_anchor == false:
+					velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
+					velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
+				elif horizontal_anchor == true:
+					lerp_after_mov_X(direction, delta, x_axis, 7.0, "north")
+					lerp_after_mov_X(direction, delta, x_axis, 7.0, "south")
+					lerp_after_mov_Z(direction, delta, z_axis, 7.0, "east")
+					lerp_after_mov_Z(direction, delta, z_axis, 7.0, "west")
 		else:
 			if horizontal_anchor == false:
-				velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
-				velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
+				velocity.x = lerp(velocity.x, direction.x * speed, delta * 3.0)
+				velocity.z = lerp(velocity.z, direction.z * speed, delta * 3.0)
 			elif horizontal_anchor == true:
-				lerp_after_mov_X(direction, delta, x_axis, 7.0, "north")
-				lerp_after_mov_X(direction, delta, x_axis, 7.0, "south")
-				lerp_after_mov_Z(direction, delta, z_axis, 7.0, "east")
-				lerp_after_mov_Z(direction, delta, z_axis, 7.0, "west")
-	else:
-		if horizontal_anchor == false:
-			velocity.x = lerp(velocity.x, direction.x * speed, delta * 3.0)
-			velocity.z = lerp(velocity.z, direction.z * speed, delta * 3.0)
-		elif horizontal_anchor == true:
-			lerp_after_mov_X(direction, delta, x_axis, 3.0, "north") 
-			lerp_after_mov_X(direction, delta, x_axis, 3.0, "south")
-			lerp_after_mov_Z(direction, delta, z_axis, 3.0, "east")
-			lerp_after_mov_Z(direction, delta, z_axis, 3.0, "west")
+				lerp_after_mov_X(direction, delta, x_axis, 3.0, "north") 
+				lerp_after_mov_X(direction, delta, x_axis, 3.0, "south")
+				lerp_after_mov_Z(direction, delta, z_axis, 3.0, "east")
+				lerp_after_mov_Z(direction, delta, z_axis, 3.0, "west")
 
-	T_BOB += delta * velocity.length() * float(is_on_floor())
-	camera.transform.origin = _headbob(T_BOB)
+		T_BOB += delta * velocity.length() * float(is_on_floor())
+		camera.transform.origin = _headbob(T_BOB)
 
-	var horizontal_speed = Vector3(velocity.x, 0, velocity.z).length()
-	var velocity_clamped = clamp(horizontal_speed, 0.0, SPRINT_SPEED * 2)
-	if is_sprinting and is_on_floor():
-		fov_bonuses = RUN_FOV_BONUS
-	elif is_crouching:
-		fov_bonuses = -10.0
-	else:
-		fov_bonuses = 0.0
+		var horizontal_speed = Vector3(velocity.x, 0, velocity.z).length()
+		var velocity_clamped = clamp(horizontal_speed, 0.0, SPRINT_SPEED * 2)
+		if is_sprinting and is_on_floor():
+			fov_bonuses = RUN_FOV_BONUS
+		elif is_crouching:
+			fov_bonuses = -10.0
+		else:
+			fov_bonuses = 0.0
 
-	if !is_using_camera:
-		var normal_target = BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses
-		camera.fov = lerp(camera.fov, normal_target, delta * 8.0)
-	
-	if held_object and is_using_camera and Gamestate.is_using_camera:
-		if Input.is_action_just_pressed("multiply"):
-			held_object.multiply()
+		if !is_using_camera:
+			var normal_target = BASE_FOV + FOV_CHANGE * velocity_clamped + fov_bonuses
+			camera.fov = lerp(camera.fov, normal_target, delta * 8.0)
 		
-		if Input.is_action_just_pressed("reset_clones"):
-			held_object.reset_all_clones()
+		if held_object and is_using_camera and Gamestate.is_using_camera:
+			if Input.is_action_just_pressed("multiply"):
+				held_object.multiply()
+			
+			if Input.is_action_just_pressed("reset_clones"):
+				held_object.reset_all_clones()
 
-	if held_object and Input.is_action_just_pressed("drop"):
-		held_object.drop()
-		held_object = null
-		
-	move_and_slide()
-	check_hover_collision()
+		if held_object and Input.is_action_just_pressed("drop"):
+			held_object.drop()
+			held_object = null
+			
+		move_and_slide()
+		check_hover_collision()
 
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO
@@ -241,6 +250,23 @@ func _headbob(time) -> Vector3:
 	pos.y = sin(time * BOB_FREQUENCY) * BOB_AMPLITUDE
 	return pos
 
+func toggle_pause():
+	is_paused = !is_paused
+	get_tree().paused = is_paused
+	pause_menu.visible = is_paused
+
+	if is_paused:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		
+func on_resume_button_pressed():
+	if is_paused:
+		toggle_pause()
+
+func on_quit_button_pressed():
+	get_tree().quit()
+			
 func can_stand() -> bool:
 	
 	var up = up_direction.normalized()
