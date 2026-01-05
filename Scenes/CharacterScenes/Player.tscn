@@ -5,7 +5,7 @@
 [ext_resource type="Shader" uid="uid://0tijrc5e6vua" path="res://Scripts/Shaders/Nightvision.gdshader" id="3_dute7"]
 [ext_resource type="AudioStream" uid="uid://bcr76lnl5lfme" path="res://Sounds/nightvision.wav" id="3_kdgwr"]
 [ext_resource type="AudioStream" uid="uid://ck1n8mo5us1ou" path="res://Sounds/cameraon.wav" id="4_o5g2r"]
-[ext_resource type="Texture2D" uid="uid://qucgxlmi1d2e" path="res://cam_overlay.png" id="6_kdgwr"]
+[ext_resource type="Texture2D" uid="uid://do75r1j2xvlue" path="res://Camoverlaysemrect.png" id="6_kdgwr"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ectt0"]
 
