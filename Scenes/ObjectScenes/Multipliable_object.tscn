@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://x06mq4og0xb5"]
+
+[ext_resource type="Script" uid="uid://b73xatt5hvepw" path="res://Scripts/Object_Scripts/multipliable_object.gd" id="1_8775c"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_mwv1p"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mwv1p"]
+
+[node name="MultipliableObject" type="RigidBody3D"]
+script = ExtResource("1_8775c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = SubResource("BoxMesh_mwv1p")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+shape = SubResource("BoxShape3D_mwv1p")
