@@ -293,6 +293,15 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 50
 text = "Paused"
 
+[node name="ParavisionLabel" type="Label" parent="CanvasLayer2/PauseMenu"]
+layout_mode = 1
+offset_left = 21.0
+offset_top = 28.0
+offset_right = 273.0
+offset_bottom = 97.0
+theme_override_font_sizes/font_size = 35
+text = "Paravision"
+
 [node name="Resume" type="Button" parent="CanvasLayer2/PauseMenu"]
 layout_mode = 1
 anchors_preset = 8
