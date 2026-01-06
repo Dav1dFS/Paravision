@@ -168,18 +168,24 @@ func _physics_process(delta):
 		if not is_on_floor():
 			match horizontal_anchor:
 				false:
-					gravity_calc(delta, inverted, 0, 0, gravity)
+					gravity_calc(delta, "up", 0, 0, gravity)
+					gravity_calc(delta, "down", 0, 0, gravity)
 				true:
-					gravity_calc(delta, x_axis, gravity, 0, 0)
-					gravity_calc(delta, z_axis, 0, gravity, 0)
+					gravity_calc(delta, "north", gravity, 0, 0)
+					gravity_calc(delta, "south", gravity, 0, 0)
+					gravity_calc(delta, "east", 0, gravity, 0)
+					gravity_calc(delta, "west", 0, gravity, 0) 
 		
 		if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 			match horizontal_anchor:
 				false:
-					jump_calc(inverted, JUMP_VELOCITY, velocity.x, velocity.z)
+					jump_calc(JUMP_VELOCITY, velocity.x, velocity.z, "up")
+					jump_calc(JUMP_VELOCITY, velocity.x, velocity.z, "down")
 				true:
-					jump_calc(x_axis, velocity.y, JUMP_VELOCITY, velocity.z)
-					jump_calc(z_axis, velocity.y, velocity.x, JUMP_VELOCITY)
+					jump_calc(velocity.y, JUMP_VELOCITY, velocity.z, "north")
+					jump_calc(velocity.y, JUMP_VELOCITY, velocity.z, "south")
+					jump_calc(velocity.y, velocity.x, JUMP_VELOCITY, "east")
+					jump_calc(velocity.y, velocity.x, JUMP_VELOCITY, "west")
 
 		var input_dir := Input.get_vector("left", "right", "forward", "back")
 		var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -476,14 +482,15 @@ func hori_grav_floor_movement_Z(axis_bool: bool, axis_bool_state: bool, x_float:
 		velocity.x = x_float * direction_1 * speed
 		velocity.y = y_float * direction_2 * speed
 			
-func gravity_calc(delta, anchor_bool: bool, grav_float: float, grav_float_2: float, grav_float_3: float):
-	if anchor_bool == true or anchor_bool == false:
+func gravity_calc(delta, anchor_value: String, grav_float: float, grav_float_2: float, grav_float_3: float):
+	if current_anchor == anchor_value:
 		velocity.x -= grav_float * delta
 		velocity.z -= grav_float_2 * delta
 		velocity.y -= grav_float_3 * delta
 
-func jump_calc(anchor_bool: bool, value_1: float, value_2: float, value_3: float):
-	if anchor_bool == true or anchor_bool == false:
+func jump_calc(value_1: float, value_2: float, value_3: float, current_anchor_string: String):
+	#if anchor_bool == true or anchor_bool == false:
+	if current_anchor == current_anchor_string:
 		velocity.y = value_1
 		velocity.x = value_2
 		velocity.z = value_3
