@@ -188,6 +188,36 @@ func _physics_process(delta):
 					jump_calc(velocity.y, velocity.x, JUMP_VELOCITY, "west")
 
 		var input_dir := Input.get_vector("left", "right", "forward", "back")
+		if current_anchor == "up":
+			var head_rotation = head.rotation.y
+
+			if is_on_floor():
+				if abs(cos(head_rotation)) < 0.5:
+					input_dir.x *= 1
+			else:
+				head_rotation = wrapf(head.rotation.y, -PI, PI)
+				# frente e tras
+				if abs(head_rotation) < PI / 4 or abs(head_rotation) > 3 * PI / 4:
+					input_dir.x *= 1
+					input_dir.y *= -1
+				else:
+					# laterais
+					input_dir.x *= -1
+					input_dir.y *= 1
+		elif current_anchor == "west":
+			var head_rotation = wrapf(head.rotation.y, -PI, PI)
+
+			if is_on_floor():
+				if abs(cos(head_rotation)) < 0.5	:
+					input_dir.x *= 1
+			else:
+				# frente e tras
+				if abs(sin(head_rotation)) < 0.5:
+					input_dir.x *= 1
+				else:
+					# laterais
+					input_dir.y *= 1
+					
 		var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
 		if is_on_floor():
